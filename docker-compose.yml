@@ -37,7 +37,10 @@ services:
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
       N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://n8n:5678/webhook}
       N8N_API_KEY: ${N8N_API_KEY}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin2026}
       NODE_ENV: production
+    volumes:
+      - ./public:/app/public
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,6 +83,7 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./public:/app/public:ro
       - nginx_logs:/var/log/nginx
     depends_on:
       - app

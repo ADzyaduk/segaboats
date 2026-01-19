@@ -34,10 +34,13 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Get admin password from runtime config (from .env)
+    const config = useRuntimeConfig()
+    const adminPassword = config.adminPassword || 'admin2026' // Fallback to default
+    
     // Simple password check (in production, use bcrypt)
-    // For now, check if password matches a simple pattern
     // TODO: Implement proper password hashing
-    const isValidPassword = body.password === 'admin2026' // Temporary default password
+    const isValidPassword = body.password === adminPassword
 
     if (!isValidPassword) {
       throw createError({

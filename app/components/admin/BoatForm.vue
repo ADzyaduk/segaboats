@@ -40,14 +40,52 @@ const boatTypes = [
   { label: 'Парусная яхта', value: 'SAILBOAT' }
 ]
 
-const addImage = () => {
-  const url = prompt('Введите URL изображения:')
-  if (url) {
-    formData.value.images.push(url)
-    if (!formData.value.thumbnail) {
-      formData.value.thumbnail = url
+const isUploading = ref(false)
+
+const uploadImage = async (file: File) => {
+  isUploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await $fetch<{
+      success: boolean
+      data: { url: string; filename: string }
+    }>('/api/admin/upload', {
+      method: 'POST',
+      body: formData
+    })
+
+    if (response.success && response.data) {
+      formData.value.images.push(response.data.url)
+      if (!formData.value.thumbnail) {
+        formData.value.thumbnail = response.data.url
+      }
+      return response.data.url
     }
+  } catch (error: any) {
+    console.error('Upload error:', error)
+    alert(error?.data?.message || 'Ошибка загрузки изображения')
+  } finally {
+    isUploading.value = false
   }
+}
+
+const handleFileSelect = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (file) {
+    await uploadImage(file)
+    target.value = '' // Reset input
+  }
+}
+
+const addImage = () => {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/jpeg,image/jpg,image/png,image/webp'
+  input.onchange = handleFileSelect
+  input.click()
 }
 
 const removeImage = (index: number) => {
@@ -228,15 +266,30 @@ const removeFeature = (index: number) => {
     <div class="space-y-4">
       <div class="flex items-center justify-between">
         <h4 class="font-semibold text-gray-900 dark:text-white">Изображения</h4>
-        <UButton size="sm" variant="outline" @click="addImage">
-          <UIcon name="i-heroicons-plus" class="mr-1" />
-          Добавить
-        </UButton>
+        <div class="flex gap-2">
+          <UButton size="sm" variant="outline" @click="addImage" :loading="isUploading">
+            <UIcon name="i-heroicons-arrow-up-tray" class="mr-1" />
+            Загрузить файл
+          </UButton>
+          <UButton size="sm" variant="outline" @click="() => {
+            const url = prompt('Введите URL изображения:\n\nПримеры:\nhttps://res.cloudinary.com/.../yacht.jpg\n/images/boats/yacht-1.jpg')
+            if (url && url.trim()) {
+              formData.images.push(url.trim())
+              if (!formData.thumbnail) formData.thumbnail = url.trim()
+            }
+          }">
+            <UIcon name="i-heroicons-link" class="mr-1" />
+            Добавить URL
+          </UButton>
+        </div>
       </div>
 
       <div>
         <label class="block text-sm font-medium mb-1">Главное изображение (URL)</label>
-        <UInput v-model="formData.thumbnail" placeholder="https://..." class="w-full" />
+        <UInput v-model="formData.thumbnail" placeholder="https://example.com/yacht.jpg или /images/boats/yacht.jpg" class="w-full" />
+        <p class="text-xs text-gray-500 mt-1">
+          Вставьте полный URL (https://...) или путь от корня (/images/...)
+        </p>
       </div>
 
       <div v-if="formData.images.length > 0" class="space-y-2">

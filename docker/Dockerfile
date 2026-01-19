@@ -35,8 +35,12 @@ COPY --from=builder /app/.output ./.output
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 
+# Copy public directory (for images)
+COPY --from=builder /app/public ./public
+
 # Set ownership
 RUN chown -R nuxtjs:nodejs /app
+RUN chmod -R 755 /app/public
 
 USER nuxtjs
 

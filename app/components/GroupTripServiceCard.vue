@@ -102,9 +102,9 @@ const getDefaultDescription = (type: GroupTripService['type']): string => {
     </template>
 
     <!-- Content -->
-    <div class="space-y-3 p-4 flex flex-col h-[160px]">
-      <!-- Title - fixed height -->
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white line-clamp-1 h-7">
+    <div class="space-y-3 p-4 flex flex-col">
+      <!-- Title - can wrap to 2 lines -->
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white line-clamp-2 min-h-14">
         {{ service.title }}
       </h3>
 
@@ -120,8 +120,8 @@ const getDefaultDescription = (type: GroupTripService['type']): string => {
         </span>
       </div>
 
-      <!-- Description - fixed height -->
-      <p class="text-gray-600 dark:text-gray-400 line-clamp-3 text-sm leading-relaxed h-[120px]">
+      <!-- Description - flexible height -->
+      <p class="text-gray-600 dark:text-gray-400 line-clamp-3 text-sm leading-relaxed flex-1">
         {{ service.description || getDefaultDescription(service.type) }}
       </p>
     </div>

@@ -20,6 +20,7 @@ export default defineNuxtConfig({
     telegramWebhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET,
     n8nWebhookUrl: process.env.N8N_WEBHOOK_URL,
     n8nApiKey: process.env.N8N_API_KEY,
+    adminPassword: process.env.ADMIN_PASSWORD || 'admin2026', // Пароль админ-панели
 
     // Публичные переменные (доступны на клиенте)
     public: {
