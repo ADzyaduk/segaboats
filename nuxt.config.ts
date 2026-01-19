@@ -63,7 +63,9 @@ export default defineNuxtConfig({
   // Оптимизация
   experimental: {
     payloadExtraction: true,
-    viewTransition: true
+    viewTransition: true,
+    // Disable import protection to fix @nuxt/ui issue
+    watcher: false
   },
 
   // Nitro optimization
@@ -85,9 +87,24 @@ export default defineNuxtConfig({
             'vue-vendor': ['vue', 'vue-router'],
             'ui-vendor': ['@nuxt/ui']
           }
-        }
+        },
+      },
+      commonjsOptions: {
+        transformMixedEsModules: true
       }
+    },
+    // Fix for @nuxt/ui import protection issue
+    optimizeDeps: {
+      exclude: ['@nuxt/kit']
+    },
+    ssr: {
+      noExternal: ['@nuxt/ui']
     }
+  },
+
+  // Build configuration to fix @nuxt/ui import protection issue
+  build: {
+    transpile: ['@nuxt/ui']
   },
 
   // Route rules
