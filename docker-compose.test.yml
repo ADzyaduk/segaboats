@@ -1,0 +1,64 @@
+# Упрощенная конфигурация для тестирования n8n и базы данных
+# Использование: docker-compose -f docker-compose.test.yml up -d
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: boats2026-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-boats}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-boats2026secret}
+      POSTGRES_DB: ${POSTGRES_DB:-boats2026}
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-boats}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - boats-test-network
+
+  # n8n Automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: boats2026-n8n-test
+    restart: unless-stopped
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-admin2026}
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://n8n:5678/
+      - GENERIC_TIMEZONE=Europe/Moscow
+      - TZ=Europe/Moscow
+      # Подключение к PostgreSQL для хранения данных n8n
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${N8N_DB_NAME:-n8n}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-boats}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-boats2026secret}
+    volumes:
+      - n8n_test_data:/home/node/.n8n
+    ports:
+      - "5678:5678"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - boats-test-network
+
+volumes:
+  postgres_test_data:
+  n8n_test_data:
+
+networks:
+  boats-test-network:
+    driver: bridge

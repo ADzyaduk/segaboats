@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
 
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_ENV !== 'production' },
 
   modules: [
     '@nuxt/eslint',
@@ -65,7 +65,9 @@ export default defineNuxtConfig({
     payloadExtraction: true,
     viewTransition: true,
     // Disable import protection to fix @nuxt/ui issue
-    watcher: false
+    watcher: false,
+    // Try to disable import protection plugin
+    entryImportMap: false
   },
 
   // Nitro optimization
@@ -75,6 +77,16 @@ export default defineNuxtConfig({
     prerender: {
       crawlLinks: true,
       routes: ['/']
+    },
+    // Workaround for @nuxt/ui import protection issue
+    experimental: {
+      wasm: true
+    },
+    // Allow @nuxt/kit to be used in certain contexts
+    esbuild: {
+      options: {
+        external: []
+      }
     }
   },
 
@@ -104,7 +116,7 @@ export default defineNuxtConfig({
 
   // Build configuration to fix @nuxt/ui import protection issue
   build: {
-    transpile: ['@nuxt/ui']
+    transpile: ['@nuxt/ui', '@nuxt/kit']
   },
 
   // Route rules
