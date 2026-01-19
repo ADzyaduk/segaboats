@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Admin login page
 
-const email = ref('admin@yachts-sochi.ru')
+const email = ref('admin@boats2026.ru')
 const password = ref('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
@@ -83,7 +83,7 @@ useSeoMeta({
             <UInput
               v-model="email"
               type="email"
-              placeholder="admin@yachts-sochi.ru"
+              placeholder="admin@boats2026.ru"
               required
               autocomplete="email"
             />
@@ -121,7 +121,7 @@ useSeoMeta({
         </form>
 
         <div class="mt-6 text-center text-sm text-gray-500">
-          <p>По умолчанию: admin@yachts-sochi.ru / admin2026</p>
+          <p>По умолчанию: admin@boats2026.ru / Admin2026</p>
         </div>
       </UCard>
     </div>
