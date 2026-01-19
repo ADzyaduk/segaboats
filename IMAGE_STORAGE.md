@@ -7,10 +7,23 @@
 1. Войдите в админ-панель: `http://155.212.189.214/admin`
 2. Перейдите в **"Управление яхтами"**
 3. При добавлении/редактировании яхты:
+   - **Сначала введите название яхты** (например: "Лазурная мечта")
    - Нажмите **"Загрузить файл"** 
    - Выберите изображение (JPG, PNG, WebP, до 5MB)
-   - Изображение автоматически сохранится в `/public/images/boats/`
-   - URL будет добавлен автоматически: `/images/boats/boat-1234567890-abc123.jpg`
+   - Изображение автоматически сохранится в `/public/images/boats/лазурная-мечта/`
+   - URL будет добавлен автоматически: `/images/boats/лазурная-мечта/1234567890-abc123.jpg`
+
+### Структура папок
+
+Изображения организуются по названию яхты:
+```
+/public/images/boats/
+  /лазурная-мечта/
+    - 1234567890-abc123.jpg
+    - 1234567891-def456.jpg
+  /морской-бриз/
+    - 1234567892-ghi789.jpg
+```
 
 ### Преимущества
 
@@ -26,19 +39,26 @@
 ### Структура папок
 
 ```
-/public
-  /images
-    /boats
-      - boat-1-main.jpg
-      - boat-1-gallery-1.jpg
-      - boat-2-main.jpg
+/public/images/boats/
+  /лазурная-мечта/
+    - main.jpg
+    - gallery-1.jpg
+    - gallery-2.jpg
+  /морской-бриз/
+    - main.jpg
+    - interior.jpg
 ```
 
 ### Загрузка файлов
 
 ```bash
-# На вашем компьютере
-scp yacht-photo.jpg user@155.212.189.214:/opt/segaboats/public/images/boats/
+# Создайте папку для яхты (по названию)
+ssh user@155.212.189.214
+cd /opt/segaboats/public/images/boats
+mkdir -p "лазурная-мечта"
+
+# Загрузите файлы
+scp yacht-photo.jpg user@155.212.189.214:/opt/segaboats/public/images/boats/лазурная-мечта/
 
 # Или через SFTP клиент (FileZilla, WinSCP)
 ```
@@ -47,8 +67,11 @@ scp yacht-photo.jpg user@155.212.189.214:/opt/segaboats/public/images/boats/
 
 После загрузки используйте относительный путь:
 ```
-/images/boats/yacht-photo.jpg
+/images/boats/лазурная-мечта/yacht-photo.jpg
+/images/boats/морской-бриз/main.jpg
 ```
+
+**Важно:** Название папки создается автоматически из названия яхты (транслитерация, нижний регистр, дефисы вместо пробелов).
 
 ---
 

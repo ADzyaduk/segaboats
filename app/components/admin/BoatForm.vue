@@ -45,15 +45,20 @@ const isUploading = ref(false)
 const uploadImage = async (file: File) => {
   isUploading.value = true
   try {
-    const formData = new FormData()
-    formData.append('file', file)
+    const uploadFormData = new FormData()
+    uploadFormData.append('file', file)
+    
+    // Send boat name to create folder by name
+    if (formData.value.name) {
+      uploadFormData.append('boatName', formData.value.name)
+    }
 
     const response = await $fetch<{
       success: boolean
-      data: { url: string; filename: string }
+      data: { url: string; filename: string; boatSlug: string }
     }>('/api/admin/upload', {
       method: 'POST',
-      body: formData
+      body: uploadFormData
     })
 
     if (response.success && response.data) {

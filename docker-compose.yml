@@ -58,10 +58,11 @@ services:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-admin2026}
-      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_HOST=${N8N_HOST:-155.212.189.214}
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://n8n:5678/
+      - N8N_SECURE_COOKIE=false
+      - WEBHOOK_URL=http://${N8N_HOST:-155.212.189.214}:5678/
       - GENERIC_TIMEZONE=Europe/Moscow
       - TZ=Europe/Moscow
     volumes:

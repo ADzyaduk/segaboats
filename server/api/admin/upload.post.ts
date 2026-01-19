@@ -1,9 +1,33 @@
 // Upload image endpoint for admin panel
-// Stores images in /public/images/boats/
+// Stores images in /public/images/boats/{boat-slug}/
 
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
+
+// Create slug from boat name (supports Cyrillic)
+function createSlug(name: string): string {
+  // Simple transliteration for common Cyrillic characters
+  const translitMap: Record<string, string> = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+  }
+
+  return name
+    .toLowerCase()
+    .trim()
+    .split('')
+    .map(char => translitMap[char] || char)
+    .join('')
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters (keep only latin, numbers, spaces, hyphens)
+    .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+    .substring(0, 50) // Limit length
+    || 'boat' // Fallback if empty
+}
 
 export default defineEventHandler(async (event) => {
   try {
@@ -18,9 +42,19 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const file = formData[0]
-    
-    if (!file.filename || !file.data) {
+    // Find file and boatName in form data
+    let file: any = null
+    let boatName: string | null = null
+
+    for (const item of formData) {
+      if (item.name === 'file' && item.filename) {
+        file = item
+      } else if (item.name === 'boatName' && item.data) {
+        boatName = item.data.toString('utf-8')
+      }
+    }
+
+    if (!file || !file.filename || !file.data) {
       throw createError({
         statusCode: 400,
         message: 'Неверный формат файла'
@@ -45,14 +79,17 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Create boat folder slug
+    const boatSlug = boatName ? createSlug(boatName) : 'default'
+    
     // Generate unique filename
     const timestamp = Date.now()
     const random = Math.random().toString(36).substring(2, 9)
     const extension = file.filename.split('.').pop() || 'jpg'
-    const filename = `boat-${timestamp}-${random}.${extension}`
+    const filename = `${timestamp}-${random}.${extension}`
 
-    // Create directory if it doesn't exist
-    const uploadDir = join(process.cwd(), 'public', 'images', 'boats')
+    // Create directory structure: public/images/boats/{boat-slug}/
+    const uploadDir = join(process.cwd(), 'public', 'images', 'boats', boatSlug)
     if (!existsSync(uploadDir)) {
       await mkdir(uploadDir, { recursive: true })
     }
@@ -62,13 +99,14 @@ export default defineEventHandler(async (event) => {
     await writeFile(filePath, file.data)
 
     // Return URL
-    const imageUrl = `/images/boats/${filename}`
+    const imageUrl = `/images/boats/${boatSlug}/${filename}`
 
     return {
       success: true,
       data: {
         url: imageUrl,
-        filename: filename
+        filename: filename,
+        boatSlug: boatSlug
       }
     }
   } catch (error: any) {
