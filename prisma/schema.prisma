@@ -1,0 +1,264 @@
+// Prisma Schema for Boats2026
+// Yacht rental booking system
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Enums
+// ============================================
+
+enum UserRole {
+  USER
+  ADMIN
+  OWNER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  PAID
+  CANCELLED
+  COMPLETED
+}
+
+enum BoatType {
+  YACHT
+  CATAMARAN
+  SPEEDBOAT
+  SAILBOAT
+}
+
+enum GroupTripType {
+  SHORT      // 45 minutes
+  MEDIUM     // 1.5 hours
+  FISHING    // 3 hours fishing
+}
+
+enum GroupTripStatus {
+  SCHEDULED
+  FULL
+  COMPLETED
+  CANCELLED
+}
+
+enum GroupTripTicketStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+// ============================================
+// Models
+// ============================================
+
+model User {
+  id              String    @id @default(cuid())
+  telegramId      String    @unique
+  telegramUsername String?
+  firstName       String?
+  lastName        String?
+  phone           String?
+  email           String?
+  role            UserRole  @default(USER)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  bookings        Booking[]
+  ownedBoats      Boat[]    @relation("BoatOwner")
+  groupTripTickets GroupTripTicket[]
+
+  @@index([telegramId])
+  @@index([role])
+}
+
+model Boat {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  detailedDescription String? // Detailed description of the boat
+  type            BoatType  @default(YACHT)
+  capacity        Int       // Maximum passengers (always 11 by regulations)
+  recommendedCapacity Int?  // Recommended capacity for comfort
+  length          Float?    // Length in meters
+  width           Float?    // Width in meters
+  year            Int?      // Build year
+  
+  // Pricing
+  pricePerHour    Int       // Price in RUB per hour
+  pricePerDay     Int?      // Optional: daily rate
+  minimumHours    Int       @default(2)
+  
+  // Media
+  images          String    @default("[]") // JSON array of image URLs
+  thumbnail       String?   // Main image URL
+  
+  // Location
+  location        String    @default("Сочи")
+  pier            String?   // Specific pier/marina
+  
+  // Features
+  features        String    @default("[]") // JSON array of features (WiFi, Kitchen, etc.)
+  hasCapitan      Boolean   @default(true)
+  hasCrew         Boolean   @default(false)
+  
+  // Status
+  isActive        Boolean   @default(true)
+  isAvailable     Boolean   @default(true)
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  ownerId         String?
+  owner           User?     @relation("BoatOwner", fields: [ownerId], references: [id])
+  bookings        Booking[]
+  groupTrips      GroupTrip[]
+
+  @@unique([name])
+  @@index([type])
+  @@index([isActive, isAvailable])
+  @@index([pricePerHour])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  
+  // Booking details
+  startDate       DateTime
+  endDate         DateTime
+  hours           Int           // Duration in hours
+  passengers      Int           // Number of passengers
+  
+  // Pricing
+  totalPrice      Int           // Total price in RUB
+  deposit         Int?          // Deposit amount if any
+  
+  // Status
+  status          BookingStatus @default(PENDING)
+  
+  // Customer info (can be different from user)
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  customerNotes   String?       // Special requests
+  
+  // Payment
+  paymentId       String?       // External payment ID
+  paidAt          DateTime?
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  
+  // Relations
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  boatId          String
+  boat            Boat          @relation(fields: [boatId], references: [id])
+
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([userId])
+  @@index([boatId])
+}
+
+// Telegram webhook logs for debugging
+model TelegramLog {
+  id              String    @id @default(cuid())
+  updateId        String
+  updateType      String
+  chatId          String?
+  userId          String?
+  payload         Json
+  createdAt       DateTime  @default(now())
+
+  @@index([updateId])
+  @@index([chatId])
+}
+
+// Group trips for ticket-based bookings
+model GroupTrip {
+  id              String    @id @default(cuid())
+  type            GroupTripType
+  duration        Int       // Duration in minutes
+  price           Int       // Ticket price in RUB
+  maxCapacity     Int       @default(11) // Maximum capacity (always 11)
+  availableSeats  Int       // Available seats
+  departureDate   DateTime  // Departure date and time
+  departureTime   String?   // Time as string (HH:mm format)
+  boatId          String?   // Optional boat assignment
+  boat            Boat?     @relation(fields: [boatId], references: [id])
+  status          GroupTripStatus @default(SCHEDULED)
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  tickets         GroupTripTicket[]
+
+  @@index([status])
+  @@index([departureDate])
+  @@index([type])
+}
+
+// Group trip service types (SHORT, MEDIUM, FISHING)
+model GroupTripService {
+  id          String    @id @default(cuid())
+  type        GroupTripType @unique
+  duration    Int       // Duration in minutes
+  price       Int       // Ticket price in RUB
+  title       String    // "Рыбалка", "Прогулка 45 минут" и т.д.
+  description String?   // Подробное описание услуги
+  image       String?   // Изображение для карточки
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  tickets     GroupTripTicket[]
+}
+
+// Group trip tickets
+model GroupTripTicket {
+  id              String    @id @default(cuid())
+  tripId          String?   // Optional - will be set when manager creates the trip
+  trip            GroupTrip? @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  serviceType     GroupTripType // Type of service (SHORT, MEDIUM, FISHING)
+  service         GroupTripService @relation(fields: [serviceType], references: [type])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  
+  // Customer info
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  desiredDate     DateTime? // Желаемая дата поездки
+  
+  // Status and pricing
+  status          GroupTripTicketStatus @default(PENDING)
+  totalPrice      Int       // Ticket price
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+
+  @@index([tripId])
+  @@index([serviceType])
+  @@index([userId])
+  @@index([status])
+}

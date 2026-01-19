@@ -1,0 +1,40 @@
+{
+  "name": "boats2026",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare && prisma generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "test:api": "tsx scripts/test-api.ts",
+    "test:full": "tsx scripts/test-full.ts",
+    "test:components": "tsx scripts/test-components.ts",
+    "test:all": "tsx scripts/test-api.ts && tsx scripts/test-components.ts && tsx scripts/test-full.ts"
+  },
+  "dependencies": {
+    "@nuxt/a11y": "^1.0.0-alpha.1",
+    "@nuxt/eslint": "^1.12.1",
+    "@nuxt/image": "^2.0.0",
+    "@nuxt/ui": "^4.3.0",
+    "@pinia/nuxt": "^0.9.0",
+    "@prisma/client": "^6.2.0",
+    "eslint": "^9.39.2",
+    "nuxt": "^4.2.2",
+    "pinia": "^2.3.0",
+    "typescript": "^5.9.3",
+    "vue": "^3.5.26",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@iconify-json/heroicons": "^1.2.3",
+    "prisma": "^6.2.0",
+    "tsx": "^4.21.0"
+  }
+}
