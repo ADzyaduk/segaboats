@@ -1,8 +1,6 @@
 # Boats2026 Docker Compose Configuration
 # Development and Production ready
 
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
