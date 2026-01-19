@@ -63,11 +63,7 @@ export default defineNuxtConfig({
   // Оптимизация
   experimental: {
     payloadExtraction: true,
-    viewTransition: true,
-    // Disable import protection to fix @nuxt/ui issue
-    watcher: false,
-    // Try to disable import protection plugin
-    entryImportMap: false
+    viewTransition: true
   },
 
   // Nitro optimization
@@ -78,15 +74,8 @@ export default defineNuxtConfig({
       crawlLinks: true,
       routes: ['/']
     },
-    // Workaround for @nuxt/ui import protection issue
     experimental: {
       wasm: true
-    },
-    // Allow @nuxt/kit to be used in certain contexts
-    esbuild: {
-      options: {
-        external: []
-      }
     }
   },
 
@@ -96,8 +85,7 @@ export default defineNuxtConfig({
       rollupOptions: {
         output: {
           manualChunks: {
-            'vue-vendor': ['vue', 'vue-router'],
-            'ui-vendor': ['@nuxt/ui']
+            'vue-vendor': ['vue', 'vue-router']
           }
         },
       },
@@ -105,18 +93,9 @@ export default defineNuxtConfig({
         transformMixedEsModules: true
       }
     },
-    // Fix for @nuxt/ui import protection issue
-    optimizeDeps: {
-      exclude: ['@nuxt/kit']
-    },
     ssr: {
       noExternal: ['@nuxt/ui']
     }
-  },
-
-  // Build configuration to fix @nuxt/ui import protection issue
-  build: {
-    transpile: ['@nuxt/ui', '@nuxt/kit']
   },
 
   // Route rules
@@ -170,7 +149,19 @@ export default defineNuxtConfig({
   ui: {
     primary: 'blue',
     gray: 'slate',
-    global: true
+    global: true,
+    // Отключаем автоматическую загрузку шрифтов из внешних источников
+    fonts: false
+  },
+  
+  // Отключаем все внешние провайдеры шрифтов
+  fonts: {
+    providers: {
+      google: false,
+      adobe: false,
+      fontshare: false,
+      bunny: false
+    }
   },
 
   // Components configuration - auto-import from subdirectories

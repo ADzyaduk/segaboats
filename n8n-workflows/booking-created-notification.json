@@ -1,0 +1,75 @@
+{
+  "name": "Уведомление о новом бронировании",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking-created",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-booking-created",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "booking-created"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"message\": \"Booking notification received\", \"data\": $json } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $env.TELEGRAM_ADMIN_CHAT_ID }}",
+        "text": "🆕 Новое бронирование!\n\n📋 Детали:\n• ID: {{ $json.data.bookingId }}\n• Клиент: {{ $json.data.customerName }}\n• Телефон: {{ $json.data.customerPhone }}\n• Яхта: {{ $json.data.boatName }}\n• Дата: {{ $json.data.startDate }}\n• Часов: {{ $json.data.hours }}\n• Стоимость: {{ $json.data.totalPrice }} ₽"
+      },
+      "id": "telegram-notify",
+      "name": "Telegram - Уведомить админа",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [450, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Уведомить админа",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-15T10:00:00.000Z",
+  "versionId": "1"
+}

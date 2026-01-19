@@ -1,0 +1,147 @@
+{
+  "name": "Подтверждение бронирования клиенту",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking-confirmed",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-booking-confirmed",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "booking-confirmed"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"message\": \"Confirmation processed\" } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.data.customerTelegramId }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-telegram",
+      "name": "Проверить Telegram ID",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $json.data.customerTelegramId }}",
+        "text": "✅ Ваше бронирование подтверждено!\n\n📋 Детали:\n• Яхта: {{ $json.data.boatName }}\n• Дата: {{ $json.data.startDate }}\n• Продолжительность: {{ $json.data.hours }} часов\n• Стоимость: {{ $json.data.totalPrice }} ₽\n\nМы свяжемся с вами для уточнения деталей."
+      },
+      "id": "telegram-customer",
+      "name": "Telegram - Клиенту",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [650, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-credentials",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendEmail",
+        "fromEmail": "noreply@boats2026.ru",
+        "toEmail": "={{ $json.data.customerEmail }}",
+        "subject": "Подтверждение бронирования яхты",
+        "text": "Здравствуйте, {{ $json.data.customerName }}!\n\nВаше бронирование подтверждено:\n\nЯхта: {{ $json.data.boatName }}\nДата: {{ $json.data.startDate }}\nПродолжительность: {{ $json.data.hours }} часов\nСтоимость: {{ $json.data.totalPrice }} ₽\n\nМы свяжемся с вами для уточнения деталей.\n\nС уважением,\nКоманда Яхты Сочи"
+      },
+      "id": "email-customer",
+      "name": "Email - Клиенту",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [650, 400],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Проверить Telegram ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверить Telegram ID": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Клиенту",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email - Клиенту",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Клиенту": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email - Клиенту": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-15T10:00:00.000Z",
+  "versionId": "1"
+}

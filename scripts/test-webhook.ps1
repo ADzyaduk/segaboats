@@ -5,7 +5,10 @@ param(
     [string]$WebhookPath = "test-booking"
 )
 
-$webhookUrl = "http://localhost:5678/webhook/$WebhookPath"
+# Используйте IP сервера или localhost
+$n8nHost = if ($env:N8N_HOST) { $env:N8N_HOST } else { "155.212.189.214" }
+$n8nPort = if ($env:N8N_PORT) { $env:N8N_PORT } else { "5678" }
+$webhookUrl = "http://${n8nHost}:${n8nPort}/webhook/$WebhookPath"
 
 $body = @{
     event = "booking.created"
@@ -21,23 +24,23 @@ $body = @{
     timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssZ")
 } | ConvertTo-Json -Depth 10
 
-Write-Host "🧪 Тестирование webhook: $webhookUrl" -ForegroundColor Cyan
-Write-Host "📤 Отправка данных:" -ForegroundColor Cyan
+Write-Host "Testing webhook: $webhookUrl" -ForegroundColor Cyan
+Write-Host "Sending data:" -ForegroundColor Cyan
 Write-Host $body -ForegroundColor Gray
 Write-Host ""
 
 try {
     $response = Invoke-RestMethod -Uri $webhookUrl -Method Post -Body $body -ContentType "application/json" -ErrorAction Stop
     
-    Write-Host "✅ Успешный ответ:" -ForegroundColor Green
+    Write-Host "Success response:" -ForegroundColor Green
     $response | ConvertTo-Json -Depth 10 | Write-Host -ForegroundColor Green
 } catch {
-    Write-Host "❌ Ошибка:" -ForegroundColor Red
+    Write-Host "Error:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
     
     if ($_.Exception.Response) {
         $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
         $responseBody = $reader.ReadToEnd()
-        Write-Host "Ответ сервера: $responseBody" -ForegroundColor Yellow
+        Write-Host "Server response: $responseBody" -ForegroundColor Yellow
     }
 }
