@@ -1,75 +1,129 @@
-# Nuxt Minimal Starter
+# 🚤 Boats2026 - Система бронирования яхт
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Веб-приложение для бронирования яхт и катеров в Сочи с интеграцией Telegram бота и автоматизацией через n8n.
 
-## Setup
+## 🚀 Быстрый старт
 
-Make sure to install dependencies:
+### Разработка
 
 ```bash
-# npm
+# Установка зависимостей
 npm install
 
-# pnpm
-pnpm install
+# Настройка переменных окружения
+cp .env.example .env
+# Отредактируйте .env
 
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
+# Запуск dev сервера
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+### Деплой
 
-Build the application for production:
+**Самый простой способ:**
+```bash
+# Linux/Mac
+./scripts/deploy.sh
+
+# Windows
+.\scripts\deploy.ps1
+```
+
+📖 **Подробная инструкция:** [QUICK_DEPLOY.md](./QUICK_DEPLOY.md)
+
+## 📚 Документация
+
+- [🚀 Быстрый деплой](./QUICK_DEPLOY.md) - пошаговая инструкция по деплою
+- [📋 Полное руководство по деплою](./docs/DEPLOYMENT.md) - детальная документация
+- [🤖 Настройка Telegram бота](./docs/TELEGRAM_SETUP.md)
+- [⚙️ Настройка n8n](./docs/N8N_SETUP.md)
+- [👨‍💼 Руководство администратора](./README_ADMIN.md)
+
+## 🛠 Технологии
+
+- **Frontend:** Nuxt 4, Vue 3, Nuxt UI, Tailwind CSS
+- **Backend:** Nuxt Server API, Prisma ORM
+- **Database:** PostgreSQL / SQLite (dev)
+- **Automation:** n8n
+- **Deployment:** Docker, Docker Compose, Nginx
+
+## 📦 Структура проекта
+
+```
+boats2026/
+├── app/              # Nuxt приложение
+│   ├── components/   # Vue компоненты
+│   ├── pages/        # Страницы
+│   ├── stores/       # Pinia stores
+│   └── composables/ # Composables
+├── server/           # Server API routes
+├── prisma/           # Database schema
+├── docker/           # Docker конфигурация
+├── nginx/            # Nginx конфигурация
+└── scripts/          # Скрипты деплоя
+```
+
+## 🔧 Команды
 
 ```bash
-# npm
-npm run build
+# Разработка
+npm run dev          # Запуск dev сервера
+npm run build        # Сборка для продакшн
+npm run preview      # Превью продакшн сборки
 
-# pnpm
-pnpm build
+# База данных
+npm run db:generate  # Генерация Prisma клиента
+npm run db:push      # Применить схему к БД
+npm run db:migrate   # Создать миграцию
+npm run db:seed      # Заполнить тестовыми данными
+npm run db:studio    # Открыть Prisma Studio
 
-# yarn
-yarn build
-
-# bun
-bun run build
+# Тестирование
+npm run test:api     # Тесты API
+npm run test:components # Тесты компонентов
+npm run test:full    # Полное тестирование
 ```
 
-Locally preview production build:
+## 🐳 Docker
 
 ```bash
-# npm
-npm run preview
+# Запуск всех сервисов
+docker-compose up -d
 
-# pnpm
-pnpm preview
+# Просмотр логов
+docker-compose logs -f app
 
-# yarn
-yarn preview
-
-# bun
-bun run preview
+# Остановка
+docker-compose down
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## 📝 Переменные окружения
+
+См. [.env.example](./.env.example) для полного списка переменных.
+
+Основные:
+- `DATABASE_URL` - строка подключения к БД
+- `TELEGRAM_BOT_TOKEN` - токен Telegram бота
+- `TELEGRAM_BOT_USERNAME` - username бота
+- `TELEGRAM_WEBHOOK_SECRET` - секрет для webhook
+- `N8N_WEBHOOK_URL` - URL n8n инстанса
+- `N8N_API_KEY` - API ключ n8n
+
+## 🤝 Вклад
+
+1. Fork проекта
+2. Создайте feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit изменения (`git commit -m 'Add some AmazingFeature'`)
+4. Push в branch (`git push origin feature/AmazingFeature`)
+5. Откройте Pull Request
+
+## 📄 Лицензия
+
+Этот проект является частным.
+
+## 🔗 Полезные ссылки
+
+- [Nuxt Documentation](https://nuxt.com/docs)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [n8n Documentation](https://docs.n8n.io)
+- [Docker Documentation](https://docs.docker.com)

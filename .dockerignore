@@ -1,0 +1,75 @@
+# Docker ignore file for Boats2026
+# Исключает ненужные файлы из Docker build context
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs (will be generated in container)
+.output/
+.nuxt/
+.nitro/
+dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.example
+
+# Testing
+coverage/
+.nyc_output/
+test/
+tests/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+
+# Scripts (except deployment)
+scripts/test-*.ts
+
+# Docker files (except Dockerfile)
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Prisma dev database
+prisma/prisma/dev.db
+prisma/prisma/dev.db-journal
+
+# Nginx SSL (will be mounted)
+nginx/ssl/*.pem
