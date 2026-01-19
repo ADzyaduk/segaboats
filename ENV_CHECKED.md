@@ -44,7 +44,7 @@ N8N_HOST=155.212.189.214
 # Приложение
 # ============================================
 NODE_ENV=production
-APP_URL=http://155.212.189.214
+APP_URL=https://klernesokof.beget.app
 
 # ============================================
 # Nginx (опционально)
@@ -75,7 +75,7 @@ NGINX_HTTPS_PORT=443
    curl -X POST "https://api.telegram.org/bot8533883256:AAGGtdzBkMiPdswF49zAiYesz3eaqVyafkU/setWebhook" \
      -H "Content-Type: application/json" \
      -d '{
-       "url": "http://155.212.189.214/api/telegram/webhook",
+       "url": "https://klernesokof.beget.app/api/telegram/webhook",
        "secret_token": "test-secret-123",
        "allowed_updates": ["message", "callback_query"]
      }'
