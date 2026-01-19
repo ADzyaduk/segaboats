@@ -1,6 +1,6 @@
 // Get single group trip service by type
 
-import { prisma } from '~~/server/utils/db'
+import { getGroupTripServiceByType } from '~~/server/utils/groupTripServices'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -22,24 +22,13 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Get service by type
-    const service = await prisma.groupTripService.findUnique({
-      where: {
-        type: type as 'SHORT' | 'MEDIUM' | 'FISHING'
-      }
-    })
+    // Get service by type from static config
+    const service = getGroupTripServiceByType(type as 'SHORT' | 'MEDIUM' | 'FISHING')
 
     if (!service) {
       throw createError({
         statusCode: 404,
         message: 'Услуга не найдена'
-      })
-    }
-
-    if (!service.isActive) {
-      throw createError({
-        statusCode: 404,
-        message: 'Услуга недоступна'
       })
     }
 

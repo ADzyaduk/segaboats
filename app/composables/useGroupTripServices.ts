@@ -9,8 +9,7 @@ export interface GroupTripService {
   description?: string
   image?: string
   isActive: boolean
-  createdAt: Date | string
-  updatedAt: Date | string
+  // Note: createdAt/updatedAt removed as services are now static
 }
 
 export function useGroupTripServices() {
