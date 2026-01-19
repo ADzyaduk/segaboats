@@ -7,8 +7,10 @@ WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-# Try npm ci first, fallback to npm install if lock file is out of sync
-RUN npm ci || npm install
+# Copy prisma schema before installing (needed for postinstall script)
+COPY prisma ./prisma
+# Install dependencies (using npm install for better compatibility)
+RUN npm install
 
 # Copy source code
 COPY . .
