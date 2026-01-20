@@ -26,7 +26,11 @@ fi
 # Stop Docker nginx to free port 80
 echo "Stopping Docker nginx container..."
 cd "$PROJECT_DIR" || exit 1
-docker compose stop nginx || true
+docker compose stop nginx 2>/dev/null || true
+docker compose rm -f nginx 2>/dev/null || true
+# Also try to stop by container name
+docker stop boats2026-nginx 2>/dev/null || true
+docker rm boats2026-nginx 2>/dev/null || true
 
 # Copy configuration
 echo "Copying Nginx configuration..."
@@ -46,9 +50,13 @@ fi
 echo "Testing Nginx configuration..."
 sudo nginx -t
 
-# Reload nginx
-echo "Reloading Nginx..."
-sudo systemctl reload nginx
+# Start or reload nginx
+echo "Starting Nginx..."
+if sudo systemctl is-active --quiet nginx; then
+    sudo systemctl reload nginx
+else
+    sudo systemctl start nginx
+fi
 
 # Enable nginx to start on boot
 sudo systemctl enable nginx
