@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     // Set cookie
     setCookie(event, 'admin_session', sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // HTTPS enabled via Beget
       sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 7 // 7 days
     })
