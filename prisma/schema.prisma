@@ -78,6 +78,7 @@ model User {
 
   @@index([telegramId])
   @@index([role])
+  @@map("user")
 }
 
 model Boat {
@@ -128,6 +129,7 @@ model Boat {
   @@index([type])
   @@index([isActive, isAvailable])
   @@index([pricePerHour])
+  @@map("boat")
 }
 
 model Booking {
@@ -172,6 +174,7 @@ model Booking {
   @@index([startDate, endDate])
   @@index([userId])
   @@index([boatId])
+  @@map("booking")
 }
 
 // Telegram webhook logs for debugging
@@ -186,6 +189,7 @@ model TelegramLog {
 
   @@index([updateId])
   @@index([chatId])
+  @@map("telegramLog")
 }
 
 // Group trips for ticket-based bookings
@@ -212,6 +216,7 @@ model GroupTrip {
   @@index([status])
   @@index([departureDate])
   @@index([type])
+  @@map("groupTrip")
 }
 
 // Group trip service types (SHORT, MEDIUM, FISHING)
@@ -229,6 +234,8 @@ model GroupTripService {
   
   // Relations
   tickets     GroupTripTicket[]
+  
+  @@map("groupTripService")
 }
 
 // Group trip tickets
@@ -261,4 +268,5 @@ model GroupTripTicket {
   @@index([serviceType])
   @@index([userId])
   @@index([status])
+  @@map("groupTripTicket")
 }
