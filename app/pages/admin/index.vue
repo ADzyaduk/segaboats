@@ -43,6 +43,8 @@ const login = async () => {
 
     if (data?.success) {
       toast.success('Вход выполнен', 'Добро пожаловать в админ-панель')
+      // Небольшая задержка для установки cookie
+      await new Promise(resolve => setTimeout(resolve, 100))
       await navigateTo('/admin/boats')
     } else {
       error.value = 'Неверный email или пароль'
@@ -121,7 +123,7 @@ useSeoMeta({
         </form>
 
         <div class="mt-6 text-center text-sm text-gray-500">
-          <p>По умолчанию: admin@boats2026.ru / Admin2026</p>
+          <p>По умолчанию: admin@boats2026.ru / admin2026</p>
         </div>
       </UCard>
     </div>
