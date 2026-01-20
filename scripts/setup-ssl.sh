@@ -62,10 +62,10 @@ sudo nginx -t
 sudo systemctl reload nginx || sudo systemctl start nginx
 
 # 4. Выпуск сертификата
-echo "🔐 Запрос сертификата у Let's Encrypt..."
+echo "🔐 Запрос сертификата у Let's Encrypt (расширяем существующий)..."
 sudo certbot certonly --webroot -w /var/www/certbot \
     -d $DOMAIN -d www.$DOMAIN -d v-more.ru -d www.v-more.ru \
-    --email $EMAIL --agree-tos --non-interactive
+    --email $EMAIL --agree-tos --non-interactive --expand
 
 # 5. Применяем полный конфиг с SSL
 echo "🛠 Финальная настройка Nginx с SSL..."
