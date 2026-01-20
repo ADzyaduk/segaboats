@@ -72,23 +72,23 @@ services:
     networks:
       - boats-network
 
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: boats2026-nginx
-    restart: unless-stopped
-    ports:
-      - "${NGINX_HTTP_PORT:-80}:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./public:/app/public:ro
-      - nginx_logs:/var/log/nginx
-    depends_on:
-      - app
-      - n8n
-    networks:
-      - boats-network
+  # Nginx Reverse Proxy (disabled - using system nginx instead)
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: boats2026-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${NGINX_HTTP_PORT:-80}:80"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/conf.d:/etc/nginx/conf.d:ro
+  #     - ./public:/app/public:ro
+  #     - nginx_logs:/var/log/nginx
+  #   depends_on:
+  #     - app
+  #     - n8n
+  #   networks:
+  #     - boats-network
 
 volumes:
   postgres_data:
