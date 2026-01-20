@@ -13,8 +13,12 @@ if ! command -v nginx &> /dev/null; then
 fi
 
 # Find project directory
-PROJECT_DIR="/opt/boats2026"
-if [ ! -d "$PROJECT_DIR" ]; then
+# Try to get from current directory first
+if [ -f "$(pwd)/docker-compose.yml" ]; then
+    PROJECT_DIR="$(pwd)"
+elif [ -d "/opt/boats2026" ]; then
+    PROJECT_DIR="/opt/boats2026"
+else
     # Try to find it
     PROJECT_DIR=$(find /opt /home -name "boats2026" -type d 2>/dev/null | head -1)
     if [ -z "$PROJECT_DIR" ]; then
