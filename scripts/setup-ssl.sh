@@ -30,7 +30,7 @@ fi
 sudo tee /etc/nginx/sites-available/boats2026-temp > /dev/null <<EOF
 server {
     listen 80;
-    server_name $DOMAIN www.$DOMAIN;
+    server_name $DOMAIN www.$DOMAIN v-more.ru www.v-more.ru;
 
     # Let's Encrypt verification
     location /.well-known/acme-challenge/ {
@@ -64,7 +64,7 @@ sudo systemctl reload nginx || sudo systemctl start nginx
 # 4. Выпуск сертификата
 echo "🔐 Запрос сертификата у Let's Encrypt..."
 sudo certbot certonly --webroot -w /var/www/certbot \
-    -d $DOMAIN -d www.$DOMAIN \
+    -d $DOMAIN -d www.$DOMAIN -d v-more.ru -d www.v-more.ru \
     --email $EMAIL --agree-tos --non-interactive
 
 # 5. Применяем полный конфиг с SSL
