@@ -83,9 +83,24 @@ docker compose up -d
 
 ## 📚 Документация
 
-- [Инструкция по развертыванию](./DEPLOYMENT.md) - полная инструкция
-- [env.example](./env.example) - шаблон переменных окружения
+### Развёртывание и настройка
+- [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) - Полная инструкция по развёртыванию обновлений
+- [docs/SSL_SETUP.md](./docs/SSL_SETUP.md) - Настройка SSL для v-more.ru
+- [env.example](./env.example) - Шаблон переменных окружения
+- [docs/ENV_SETUP.md](./docs/ENV_SETUP.md) - Подробная настройка .env файла
+
+### Telegram
+- [docs/TELEGRAM_MINIAPP_SETUP.md](./docs/TELEGRAM_MINIAPP_SETUP.md) - Настройка Telegram Mini App
+- [server/api/telegram/](./server/api/telegram/) - API для Telegram интеграции
+
+### n8n Automation
+- [n8n-workflows/README.md](./n8n-workflows/README.md) - Описание workflows
+- [n8n-workflows/](./n8n-workflows/) - JSON файлы workflows для импорта
+
+### Утилиты
+- [scripts/diagnose-server.sh](./scripts/diagnose-server.sh) - Диагностика сервера
+- [scripts/check-config.sh](./scripts/check-config.sh) - Проверка конфигурации
 
 ## 🐛 Решение проблем
 
-См. раздел "Решение проблем" в [DEPLOYMENT.md](./DEPLOYMENT.md)
+См. раздел "Troubleshooting" в [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)

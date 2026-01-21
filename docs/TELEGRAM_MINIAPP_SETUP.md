@@ -27,13 +27,13 @@
 5. Нажмите **Configure menu button**
 6. Введите:
    - **Button text**: `🛥 Каталог яхт`
-   - **Web App URL**: `https://v-more.store`
+   - **Web App URL**: `https://v-more.ru`
 
 ### Вариант B: Через Web App настройки
 
 1. В @BotFather отправьте `/setmenubutton`
 2. Выберите бота
-3. Введите URL: `https://v-more.store`
+3. Введите URL: `https://v-more.ru`
 
 ## Шаг 3: Настройка команд бота
 
@@ -59,7 +59,7 @@ help - Помощь
 curl -X POST "https://api.telegram.org/botYOUR_BOT_TOKEN/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{
-    "url": "https://v-more.store/api/telegram/webhook",
+    "url": "https://v-more.ru/api/telegram/webhook",
     "secret_token": "YOUR_SECRET",
     "allowed_updates": ["message", "callback_query"]
   }'
@@ -76,7 +76,7 @@ curl "https://api.telegram.org/botYOUR_BOT_TOKEN/getWebhookInfo"
 {
   "ok": true,
   "result": {
-    "url": "https://v-more.store/api/telegram/webhook",
+    "url": "https://v-more.ru/api/telegram/webhook",
     "has_custom_certificate": false,
     "pending_update_count": 0
   }
@@ -119,7 +119,7 @@ docker compose up -d --build app
 ### Mini App не открывается
 
 - Проверьте что URL начинается с `https://`
-- Проверьте SSL сертификат: `curl -I https://v-more.store`
+- Проверьте SSL сертификат: `curl -I https://v-more.ru`
 - Убедитесь что сайт доступен
 
 ### Webhook не работает

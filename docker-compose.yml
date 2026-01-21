@@ -41,6 +41,7 @@ services:
       NODE_ENV: production
     volumes:
       - ./public:/app/public
+      - ./public/images:/app/public/images
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,11 +59,12 @@ services:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-admin2026}
-      - N8N_HOST=${N8N_HOST:-v-more.store}
+      - N8N_PATH=/n8n/
+      - N8N_HOST=${N8N_HOST:-v-more.ru}
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - N8N_SECURE_COOKIE=true
-      - WEBHOOK_URL=https://${N8N_HOST:-v-more.store}/webhook/
+      - WEBHOOK_URL=https://${N8N_HOST:-v-more.ru}/webhook/
       - GENERIC_TIMEZONE=Europe/Moscow
       - TZ=Europe/Moscow
       # PostgreSQL access for n8n workflows
