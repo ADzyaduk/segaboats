@@ -1,0 +1,259 @@
+{
+  "name": "AI Уведомление о бронировании",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking-created",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-booking",
+      "name": "Webhook: Новое бронирование",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [180, 300],
+      "webhookId": "booking-created"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Ты - менеджер яхт-клуба 'Яхты Сочи'. Составь краткое уведомление для администратора о новом бронировании. Формат: деловой, но дружелюбный. Укажи ключевые детали и возможные действия. Используй эмодзи. Пиши на русском.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Новое бронирование:\\n- Клиент: {{ $json.data.customerName }}\\n- Телефон: {{ $json.data.customerPhone }}\\n- Яхта: {{ $json.data.boatName }}\\n- Дата: {{ $json.data.startDate }}\\n- Часов: {{ $json.data.hours }}\\n- Сумма: {{ $json.data.totalPrice }} руб.\\n\\nСоставь уведомление для администратора.\"\n    }\n  ],\n  \"max_tokens\": 400,\n  \"temperature\": 0.6\n}",
+        "options": {}
+      },
+      "id": "ai-generate-admin-msg",
+      "name": "AI: Сообщение для админа",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "openrouter-auth",
+          "name": "OpenRouter API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $env.TELEGRAM_ADMIN_CHAT_ID }}",
+        "text": "={{ $json.choices[0].message.content }}\n\n━━━━━━━━━━━━━━━\n📋 ID: {{ $('Webhook: Новое бронирование').item.json.data.bookingId }}\n📞 Связаться: {{ $('Webhook: Новое бронирование').item.json.data.customerPhone }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "telegram-admin",
+      "name": "Telegram: Админу",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [620, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-telegram-id",
+              "leftValue": "={{ $('Webhook: Новое бронирование').item.json.data.customerTelegramId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            },
+            {
+              "id": "not-temp",
+              "leftValue": "={{ $('Webhook: Новое бронирование').item.json.data.customerTelegramId }}",
+              "rightValue": "temp_",
+              "operator": {
+                "type": "string",
+                "operation": "notStartsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-customer-telegram",
+      "name": "Клиент в Telegram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [840, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Ты - дружелюбный ассистент яхт-клуба 'Яхты Сочи'. Составь тёплое подтверждение бронирования для клиента. Сообщение должно быть позитивным и информативным. Упомяни что с ним свяжутся для подтверждения. Используй эмодзи. Пиши на русском.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Клиент {{ $('Webhook: Новое бронирование').item.json.data.customerName }} забронировал яхту '{{ $('Webhook: Новое бронирование').item.json.data.boatName }}' на {{ $('Webhook: Новое бронирование').item.json.data.startDate }}. Продолжительность: {{ $('Webhook: Новое бронирование').item.json.data.hours }} часов. Стоимость: {{ $('Webhook: Новое бронирование').item.json.data.totalPrice }} руб. Составь подтверждение.\"\n    }\n  ],\n  \"max_tokens\": 300,\n  \"temperature\": 0.7\n}",
+        "options": {}
+      },
+      "id": "ai-generate-customer-msg",
+      "name": "AI: Сообщение клиенту",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "openrouter-auth",
+          "name": "OpenRouter API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Webhook: Новое бронирование').item.json.data.customerTelegramId }}",
+        "text": "={{ $json.choices[0].message.content }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "telegram-customer",
+      "name": "Telegram: Клиенту",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1280, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"message\": \"Notifications sent\", \"adminNotified\": true, \"customerNotified\": $('Клиент в Telegram?').item.json ? true : false } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Ответ Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1500, 300]
+    },
+    {
+      "parameters": {},
+      "id": "no-customer-telegram",
+      "name": "Нет Telegram",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1280, 400]
+    }
+  ],
+  "connections": {
+    "Webhook: Новое бронирование": {
+      "main": [
+        [
+          {
+            "node": "AI: Сообщение для админа",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Сообщение для админа": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Админу",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Админу": {
+      "main": [
+        [
+          {
+            "node": "Клиент в Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Клиент в Telegram?": {
+      "main": [
+        [
+          {
+            "node": "AI: Сообщение клиенту",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Нет Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Сообщение клиенту": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Клиенту",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Клиенту": {
+      "main": [
+        [
+          {
+            "node": "Ответ Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Нет Telegram": {
+      "main": [
+        [
+          {
+            "node": "Ответ Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["booking", "notification", "ai"],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-21T10:00:00.000Z",
+  "versionId": "1"
+}

@@ -1,0 +1,249 @@
+{
+  "name": "Умные напоминания о бронировании",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Каждый час",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [180, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT b.id, b.\"customerName\", b.\"customerPhone\", b.\"startDate\", b.hours, b.\"totalPrice\", b.status, bt.name as \"boatName\", bt.pier, u.\"telegramId\" FROM booking b JOIN boat bt ON b.\"boatId\" = bt.id JOIN \"user\" u ON b.\"userId\" = u.id WHERE b.status IN ('CONFIRMED', 'PAID') AND b.\"startDate\" BETWEEN NOW() AND NOW() + INTERVAL '25 hours' AND b.\"startDate\" > NOW() + INTERVAL '23 hours'",
+        "options": {}
+      },
+      "id": "get-upcoming-bookings",
+      "name": "Получить бронирования на завтра",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [400, 300],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-boats",
+          "name": "PostgreSQL Boats"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-results",
+              "leftValue": "={{ $json.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-has-bookings",
+      "name": "Есть бронирования?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [620, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-4o-mini\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Ты - дружелюбный ассистент яхт-клуба 'Яхты Сочи'. Твоя задача - составить тёплое и информативное напоминание о предстоящей прогулке на яхте. Используй эмодзи умеренно. Пиши на русском языке. Сообщение должно быть коротким (3-5 предложений).\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Составь напоминание для клиента {{ $json.customerName }} о прогулке на яхте '{{ $json.boatName }}' завтра в {{ $json.startDate }}. Продолжительность: {{ $json.hours }} часов. Место встречи: {{ $json.pier || 'будет уточнено' }}.\"\n    }\n  ],\n  \"max_tokens\": 300,\n  \"temperature\": 0.7\n}",
+        "options": {}
+      },
+      "id": "generate-ai-message",
+      "name": "Генерация AI сообщения",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [840, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "openrouter-auth",
+          "name": "OpenRouter API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Получить бронирования на завтра').item.json.telegramId }}",
+        "text": "={{ $json.choices[0].message.content }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "send-telegram",
+      "name": "Отправить в Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1060, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-telegram",
+              "leftValue": "={{ $json.telegramId }}",
+              "rightValue": "temp_",
+              "operator": {
+                "type": "string",
+                "operation": "notStartsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "has-telegram",
+      "name": "Есть Telegram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [840, 400]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $env.TELEGRAM_ADMIN_CHAT_ID }}",
+        "text": "📋 Клиент без Telegram:\n\n👤 {{ $json.customerName }}\n📞 {{ $json.customerPhone }}\n🛥 {{ $json.boatName }}\n📅 {{ $json.startDate }}\n\n⚠️ Требуется ручное уведомление по телефону",
+        "additionalFields": {}
+      },
+      "id": "notify-admin-no-telegram",
+      "name": "Уведомить админа",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1060, 400],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "no-op",
+      "name": "Нет бронирований",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [840, 500]
+    }
+  ],
+  "connections": {
+    "Каждый час": {
+      "main": [
+        [
+          {
+            "node": "Получить бронирования на завтра",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Получить бронирования на завтра": {
+      "main": [
+        [
+          {
+            "node": "Есть бронирования?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть бронирования?": {
+      "main": [
+        [
+          {
+            "node": "Есть Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Нет бронирований",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть Telegram?": {
+      "main": [
+        [
+          {
+            "node": "Генерация AI сообщения",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Уведомить админа",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Генерация AI сообщения": {
+      "main": [
+        [
+          {
+            "node": "Отправить в Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["booking", "reminder", "ai"],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-21T10:00:00.000Z",
+  "versionId": "1"
+}

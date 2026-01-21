@@ -1,2 +1,22 @@
 User-Agent: *
-Disallow:
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /my-tickets/
+Disallow: /booking/
+
+# Sitemap
+Sitemap: https://v-more.store/sitemap.xml
+
+# AI Crawlers
+User-Agent: GPTBot
+Allow: /
+
+User-Agent: Claude-Web
+Allow: /
+
+User-Agent: Anthropic-AI
+Allow: /
+
+User-Agent: Google-Extended
+Allow: /

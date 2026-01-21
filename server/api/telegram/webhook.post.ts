@@ -53,10 +53,10 @@ export default defineEventHandler(async (event) => {
     // Log update for debugging
     await prisma.telegramLog.create({
       data: {
-        updateId: BigInt(update.update_id),
+        updateId: String(update.update_id),
         updateType: update.message ? 'message' : update.callback_query ? 'callback_query' : 'unknown',
-        chatId: update.message?.chat.id ? BigInt(update.message.chat.id) : null,
-        userId: update.message?.from.id ? BigInt(update.message.from.id) : null,
+        chatId: update.message?.chat.id ? String(update.message.chat.id) : null,
+        userId: update.message?.from.id ? String(update.message.from.id) : null,
         payload: update as any
       }
     })
@@ -70,15 +70,28 @@ export default defineEventHandler(async (event) => {
 
       // Handle /start command
       if (text.startsWith('/start')) {
+        // Check for deep-link parameters
+        const startParam = text.split(' ')[1] // e.g., "booking_abc123" or "ticket_xyz789"
+        
         // Find or create user
         let dbUser = await prisma.user.findUnique({
-          where: { telegramId: BigInt(user.id) }
+          where: { telegramId: String(user.id) }
         })
 
         if (!dbUser) {
           dbUser = await prisma.user.create({
             data: {
-              telegramId: BigInt(user.id),
+              telegramId: String(user.id),
+              telegramUsername: user.username,
+              firstName: user.first_name,
+              lastName: user.last_name
+            }
+          })
+        } else {
+          // Update user info
+          dbUser = await prisma.user.update({
+            where: { id: dbUser.id },
+            data: {
               telegramUsername: user.username,
               firstName: user.first_name,
               lastName: user.last_name
@@ -86,7 +99,98 @@ export default defineEventHandler(async (event) => {
           })
         }
 
-        const webAppUrl = config.public.appUrl || 'https://your-domain.com'
+        // Handle booking link: /start booking_ID
+        if (startParam?.startsWith('booking_')) {
+          const bookingId = startParam.replace('booking_', '')
+          
+          const booking = await prisma.booking.findUnique({
+            where: { id: bookingId },
+            include: { boat: { select: { name: true } }, user: true }
+          })
+
+          if (booking) {
+            // Link the booking to this Telegram user if it has a temp ID
+            if (booking.user.telegramId.startsWith('temp_')) {
+              await prisma.user.update({
+                where: { id: booking.user.id },
+                data: { 
+                  telegramId: String(user.id),
+                  telegramUsername: user.username,
+                  firstName: user.first_name,
+                  lastName: user.last_name
+                }
+              })
+
+              await sendTelegramMessage({
+                chat_id: chatId,
+                text: `✅ <b>Уведомления подключены!</b>\n\n` +
+                  `Теперь вы будете получать уведомления о вашем бронировании:\n\n` +
+                  `🛥 Яхта: ${booking.boat.name}\n` +
+                  `📅 Дата: ${booking.startDate.toLocaleDateString('ru-RU')}\n` +
+                  `🕐 Время: ${booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}\n` +
+                  `💰 Сумма: ${booking.totalPrice.toLocaleString('ru-RU')} ₽\n\n` +
+                  `Мы уведомим вас о подтверждении и напомним перед прогулкой! 🌊`,
+                parse_mode: 'HTML'
+              })
+
+              return { ok: true }
+            } else {
+              // Booking already linked
+              await sendTelegramMessage({
+                chat_id: chatId,
+                text: `ℹ️ Это бронирование уже связано с аккаунтом.\n\n` +
+                  `Используйте /mybookings чтобы посмотреть ваши бронирования.`
+              })
+              return { ok: true }
+            }
+          } else {
+            await sendTelegramMessage({
+              chat_id: chatId,
+              text: `❌ Бронирование не найдено.\n\nВозможно, ссылка устарела.`
+            })
+            return { ok: true }
+          }
+        }
+
+        // Handle ticket link: /start ticket_ID
+        if (startParam?.startsWith('ticket_')) {
+          const ticketId = startParam.replace('ticket_', '')
+          
+          const ticket = await prisma.groupTripTicket.findUnique({
+            where: { id: ticketId },
+            include: { service: true, user: true }
+          })
+
+          if (ticket) {
+            // Link the ticket to this Telegram user
+            if (ticket.user.telegramId.startsWith('temp_')) {
+              await prisma.user.update({
+                where: { id: ticket.user.id },
+                data: { 
+                  telegramId: String(user.id),
+                  telegramUsername: user.username,
+                  firstName: user.first_name,
+                  lastName: user.last_name
+                }
+              })
+
+              await sendTelegramMessage({
+                chat_id: chatId,
+                text: `✅ <b>Уведомления подключены!</b>\n\n` +
+                  `Теперь вы будете получать уведомления о вашем билете:\n\n` +
+                  `🎫 ${ticket.service.title}\n` +
+                  `💰 Сумма: ${ticket.totalPrice.toLocaleString('ru-RU')} ₽\n\n` +
+                  `Мы уведомим вас, когда группа соберётся и о времени отправления! 🌊`,
+                parse_mode: 'HTML'
+              })
+
+              return { ok: true }
+            }
+          }
+        }
+
+        // Default welcome message
+        const webAppUrl = 'https://v-more.store'
         
         await sendTelegramMessage({
           chat_id: chatId,
@@ -98,6 +202,12 @@ export default defineEventHandler(async (event) => {
                 {
                   text: '🛥 Открыть каталог яхт',
                   web_app: { url: webAppUrl }
+                }
+              ],
+              [
+                {
+                  text: '🎫 Групповые прогулки',
+                  web_app: { url: `${webAppUrl}/group-trips` }
                 }
               ],
               [
@@ -156,7 +266,7 @@ export default defineEventHandler(async (event) => {
         const bookings = await prisma.booking.findMany({
           where: {
             user: {
-              telegramId: BigInt(user.id)
+              telegramId: String(user.id)
             },
             status: {
               in: ['PENDING', 'CONFIRMED', 'PAID']

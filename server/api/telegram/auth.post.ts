@@ -30,13 +30,13 @@ export default defineEventHandler(async (event) => {
 
     // Find or create user in database
     let user = await prisma.user.findUnique({
-      where: { telegramId: BigInt(telegramUser.id) }
+      where: { telegramId: String(telegramUser.id) }
     })
 
     if (!user) {
       user = await prisma.user.create({
         data: {
-          telegramId: BigInt(telegramUser.id),
+          telegramId: String(telegramUser.id),
           telegramUsername: telegramUser.username,
           firstName: telegramUser.first_name,
           lastName: telegramUser.last_name
