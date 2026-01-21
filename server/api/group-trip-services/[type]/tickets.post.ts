@@ -81,8 +81,6 @@ export default defineEventHandler(async (event) => {
     let desiredDateObj: Date | null = null
     if (body.desiredDate) {
       desiredDateObj = new Date(body.desiredDate)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
       
       if (isNaN(desiredDateObj.getTime())) {
         throw createError({
@@ -91,7 +89,12 @@ export default defineEventHandler(async (event) => {
         })
       }
       
-      if (desiredDateObj < today) {
+      // Compare dates in UTC to avoid timezone issues
+      // Extract just the date part (YYYY-MM-DD) for comparison
+      const desiredDateStr = desiredDateObj.toISOString().split('T')[0]
+      const todayStr = new Date().toISOString().split('T')[0]
+      
+      if (desiredDateStr < todayStr) {
         throw createError({
           statusCode: 400,
           message: 'Желаемая дата не может быть в прошлом'

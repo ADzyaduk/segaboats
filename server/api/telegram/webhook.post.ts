@@ -37,7 +37,7 @@ interface TelegramUpdate {
 export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
-    
+
     // Verify webhook secret (optional but recommended)
     const secretToken = getHeader(event, 'x-telegram-bot-api-secret-token')
     if (config.telegramWebhookSecret && secretToken !== config.telegramWebhookSecret) {
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
       if (text.startsWith('/start')) {
         // Check for deep-link parameters
         const startParam = text.split(' ')[1] // e.g., "booking_abc123" or "ticket_xyz789"
-        
+
         // Find or create user
         let dbUser = await prisma.user.findUnique({
           where: { telegramId: String(user.id) }
@@ -102,7 +102,7 @@ export default defineEventHandler(async (event) => {
         // Handle booking link: /start booking_ID
         if (startParam?.startsWith('booking_')) {
           const bookingId = startParam.replace('booking_', '')
-          
+
           const booking = await prisma.booking.findUnique({
             where: { id: bookingId },
             include: { boat: { select: { name: true } }, user: true }
@@ -113,7 +113,7 @@ export default defineEventHandler(async (event) => {
             if (booking.user.telegramId.startsWith('temp_')) {
               await prisma.user.update({
                 where: { id: booking.user.id },
-                data: { 
+                data: {
                   telegramId: String(user.id),
                   telegramUsername: user.username,
                   firstName: user.first_name,
@@ -155,7 +155,7 @@ export default defineEventHandler(async (event) => {
         // Handle ticket link: /start ticket_ID
         if (startParam?.startsWith('ticket_')) {
           const ticketId = startParam.replace('ticket_', '')
-          
+
           const ticket = await prisma.groupTripTicket.findUnique({
             where: { id: ticketId },
             include: { service: true, user: true }
@@ -166,7 +166,7 @@ export default defineEventHandler(async (event) => {
             if (ticket.user.telegramId.startsWith('temp_')) {
               await prisma.user.update({
                 where: { id: ticket.user.id },
-                data: { 
+                data: {
                   telegramId: String(user.id),
                   telegramUsername: user.username,
                   firstName: user.first_name,
@@ -191,7 +191,7 @@ export default defineEventHandler(async (event) => {
 
         // Default welcome message
         const webAppUrl = 'https://v-more.store'
-        
+
         await sendTelegramMessage({
           chat_id: chatId,
           text: `👋 Добро пожаловать, ${user.first_name}!\n\n🛥 Я помогу вам арендовать яхту в Сочи.\n\nНажмите кнопку ниже, чтобы открыть каталог яхт:`,
@@ -242,7 +242,7 @@ export default defineEventHandler(async (event) => {
       // Handle /boats command
       if (text === '/boats') {
         const webAppUrl = config.public.appUrl || 'https://your-domain.com'
-        
+
         await sendTelegramMessage({
           chat_id: chatId,
           text: '🛥 Нажмите кнопку ниже, чтобы посмотреть наши яхты:',
@@ -288,14 +288,14 @@ export default defineEventHandler(async (event) => {
           })
         } else {
           let text = '📋 <b>Ваши бронирования:</b>\n\n'
-          
+
           for (const booking of bookings) {
             const date = booking.startDate.toLocaleDateString('ru-RU')
-            const time = booking.startDate.toLocaleTimeString('ru-RU', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
+            const time = booking.startDate.toLocaleTimeString('ru-RU', {
+              hour: '2-digit',
+              minute: '2-digit'
             })
-            
+
             text += `🛥 ${booking.boat.name}\n`
             text += `📅 ${date} в ${time}\n`
             text += `💰 ${booking.totalPrice.toLocaleString('ru-RU')} ₽\n`
@@ -333,7 +333,7 @@ export default defineEventHandler(async (event) => {
     return { ok: true }
   } catch (error) {
     console.error('Telegram webhook error:', error)
-    
+
     // Always return 200 to Telegram to prevent retries
     return { ok: false, error: 'Internal error' }
   }

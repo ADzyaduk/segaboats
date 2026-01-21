@@ -5,38 +5,29 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "booking-created",
-        "responseMode": "lastNode",
+        "responseMode": "onReceived",
         "options": {}
       },
       "id": "webhook-booking-created",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [250, 300],
       "webhookId": "booking-created"
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ { \"status\": \"success\", \"message\": \"Booking notification received\", \"data\": $json } }}"
-      },
-      "id": "respond-webhook",
-      "name": "Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [650, 300]
-    },
-    {
-      "parameters": {
-        "operation": "sendMessage",
-        "chatId": "={{ $env.TELEGRAM_ADMIN_CHAT_ID }}",
-        "text": "🆕 Новое бронирование!\n\n📋 Детали:\n• ID: {{ $json.data.bookingId }}\n• Клиент: {{ $json.data.customerName }}\n• Телефон: {{ $json.data.customerPhone }}\n• Яхта: {{ $json.data.boatName }}\n• Дата: {{ $json.data.startDate }}\n• Часов: {{ $json.data.hours }}\n• Стоимость: {{ $json.data.totalPrice }} ₽"
+        "chatId": "413553084",
+        "text": "=🆕 *Новое бронирование!*\n\n📋 *Детали:*\n• ID: `{{ $json.body.data?.bookingId || $json.body?.bookingId || 'N/A' }}`\n• Клиент: {{ $json.body.data?.customerName || $json.body?.customerName || 'Не указано' }}\n• Телефон: {{ $json.body.data?.customerPhone || $json.body?.customerPhone || 'Не указано' }}\n• Яхта: {{ $json.body.data?.boatName || $json.body?.boatName || 'Не указана' }}\n• Дата: {{ $json.body.data?.startDate ? new Date($json.body.data.startDate).toLocaleString('ru-RU', {timeZone: 'Europe/Moscow'}) : ($json.body?.startDate || 'Не указана') }}\n• Часов: {{ $json.body.data?.hours || $json.body?.hours || '-' }}\n• Стоимость: {{ $json.body.data?.totalPrice || $json.body?.totalPrice || '0' }} ₽\n\n⏰ {{ new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Moscow'}) }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
       },
       "id": "telegram-notify",
       "name": "Telegram - Уведомить админа",
       "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1,
-      "position": [450, 200],
+      "typeVersion": 1.2,
+      "position": [500, 300],
       "credentials": {
         "telegramApi": {
           "id": "telegram-credentials",
@@ -53,11 +44,6 @@
             "node": "Telegram - Уведомить админа",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Respond to Webhook",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -70,6 +56,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-01-15T10:00:00.000Z",
-  "versionId": "1"
+  "updatedAt": "2026-01-21T12:00:00.000Z",
+  "versionId": "3"
 }

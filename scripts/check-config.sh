@@ -59,7 +59,7 @@ HAS_ERRORS=0
 
 for VAR in "${REQUIRED_VARS[@]}"; do
     VALUE="${!VAR}"
-    
+
     if [ -z "$VALUE" ]; then
         echo -e "${RED}❌ $VAR - НЕ УСТАНОВЛЕНА${NC}"
         HAS_ERRORS=1
@@ -100,7 +100,7 @@ echo "----------------------------------------"
 
 for VAR in "${RECOMMENDED_VARS[@]}"; do
     VALUE="${!VAR}"
-    
+
     if [ -z "$VALUE" ]; then
         echo -e "${YELLOW}⚠️  $VAR - не установлена (некоторые функции будут недоступны)${NC}"
     elif [[ "$VALUE" == *"example"* ]] || [[ "$VALUE" == *"here"* ]] || [[ "$VALUE" == *"abc123"* ]]; then
