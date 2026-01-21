@@ -17,8 +17,8 @@ export interface N8nResponse {
 function getN8nConfig() {
   const config = useRuntimeConfig()
   return {
-    webhookUrl: config.n8nWebhookUrl,
-    apiKey: config.n8nApiKey
+    webhookUrl: config.webhookUrl,
+    apiKey: config.webhookApiKey
   }
 }
 
@@ -33,17 +33,24 @@ export async function triggerN8nWebhook(
 ): Promise<N8nResponse> {
   const { timeout = 5000, retries = 0 } = options || {}
   
+  console.log('[n8n] Triggering webhook:', webhookPath)
+  
   try {
     const { webhookUrl, apiKey } = getN8nConfig()
     
+    console.log('[n8n] Webhook URL from config:', webhookUrl || 'NOT SET')
+    
     if (!webhookUrl) {
-      console.warn('n8n webhook URL not configured')
+      console.warn('[n8n] webhook URL not configured')
       return { success: false, error: 'n8n not configured' }
     }
 
     // Clean webhook path (remove leading/trailing slashes)
     const cleanPath = webhookPath.replace(/^\/+|\/+$/g, '')
     const url = `${webhookUrl.replace(/\/+$/, '')}/${cleanPath}`
+    
+    console.log('[n8n] Full webhook URL:', url)
+    console.log('[n8n] Payload:', JSON.stringify(payload, null, 2))
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -71,9 +78,11 @@ export async function triggerN8nWebhook(
 
       clearTimeout(timeoutId)
 
+      console.log('[n8n] Response status:', response.status)
+
       if (!response.ok) {
         const errorText = await response.text()
-        console.error(`n8n webhook error (${response.status}):`, errorText)
+        console.error('[n8n] Webhook error:', response.status, errorText)
         
         // Retry on 5xx errors
         if (response.status >= 500 && retries > 0) {
@@ -93,6 +102,7 @@ export async function triggerN8nWebhook(
         result = {}
       }
 
+      console.log('[n8n] Webhook triggered successfully')
       return {
         success: true,
         workflowId: result.workflowId,

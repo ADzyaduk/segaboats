@@ -18,8 +18,9 @@ export default defineNuxtConfig({
     databaseUrl: process.env.DATABASE_URL,
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
     telegramWebhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET,
-    n8nWebhookUrl: process.env.N8N_WEBHOOK_URL,
-    n8nApiKey: process.env.N8N_API_KEY,
+    // Используем простые имена для n8n (NUXT_WEBHOOK_URL в .env)
+    webhookUrl: process.env.WEBHOOK_URL || 'https://v-more.ru/webhook',
+    webhookApiKey: process.env.WEBHOOK_API_KEY || '',
     adminPassword: process.env.ADMIN_PASSWORD || 'admin2026', // Пароль админ-панели
 
     // Публичные переменные (доступны на клиенте)

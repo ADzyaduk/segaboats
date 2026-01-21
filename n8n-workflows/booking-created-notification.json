@@ -18,13 +18,11 @@
     {
       "parameters": {
         "chatId": "413553084",
-        "text": "=🆕 *Новое бронирование!*\n\n📋 *Детали:*\n• ID: `{{ $json.body.data?.bookingId || $json.body?.bookingId || 'N/A' }}`\n• Клиент: {{ $json.body.data?.customerName || $json.body?.customerName || 'Не указано' }}\n• Телефон: {{ $json.body.data?.customerPhone || $json.body?.customerPhone || 'Не указано' }}\n• Яхта: {{ $json.body.data?.boatName || $json.body?.boatName || 'Не указана' }}\n• Дата: {{ $json.body.data?.startDate ? new Date($json.body.data.startDate).toLocaleString('ru-RU', {timeZone: 'Europe/Moscow'}) : ($json.body?.startDate || 'Не указана') }}\n• Часов: {{ $json.body.data?.hours || $json.body?.hours || '-' }}\n• Стоимость: {{ $json.body.data?.totalPrice || $json.body?.totalPrice || '0' }} ₽\n\n⏰ {{ new Date().toLocaleString('ru-RU', {timeZone: 'Europe/Moscow'}) }}",
-        "additionalFields": {
-          "parse_mode": "Markdown"
-        }
+        "text": "=🆕 Новое бронирование!\n\n📋 Детали:\n• ID: {{ $json.body.data ? $json.body.data.bookingId : ($json.body.bookingId || 'N/A') }}\n• Клиент: {{ $json.body.data ? $json.body.data.customerName : ($json.body.customerName || 'Не указано') }}\n• Телефон: {{ $json.body.data ? $json.body.data.customerPhone : ($json.body.customerPhone || 'Не указано') }}\n• Яхта: {{ $json.body.data ? $json.body.data.boatName : ($json.body.boatName || 'Не указана') }}\n• Дата: {{ $json.body.data ? $json.body.data.startDate : ($json.body.startDate || 'Не указана') }}\n• Часов: {{ $json.body.data ? $json.body.data.hours : ($json.body.hours || '-') }}\n• Стоимость: {{ $json.body.data ? $json.body.data.totalPrice : ($json.body.totalPrice || '0') }} руб.",
+        "additionalFields": {}
       },
       "id": "telegram-notify",
-      "name": "Telegram - Уведомить админа",
+      "name": "Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [500, 300],
@@ -41,7 +39,7 @@
       "main": [
         [
           {
-            "node": "Telegram - Уведомить админа",
+            "node": "Telegram",
             "type": "main",
             "index": 0
           }
@@ -56,6 +54,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-01-21T12:00:00.000Z",
-  "versionId": "3"
+  "updatedAt": "2026-01-21T14:00:00.000Z",
+  "versionId": "4"
 }
