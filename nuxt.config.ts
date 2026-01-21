@@ -18,6 +18,7 @@ export default defineNuxtConfig({
     databaseUrl: process.env.DATABASE_URL,
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
     telegramWebhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET,
+    telegramAdminChatId: process.env.TELEGRAM_ADMIN_CHAT_ID || '413553084',
     // Используем простые имена для n8n (NUXT_WEBHOOK_URL в .env)
     webhookUrl: process.env.WEBHOOK_URL || 'https://v-more.ru/webhook',
     webhookApiKey: process.env.WEBHOOK_API_KEY || '',
@@ -26,7 +27,7 @@ export default defineNuxtConfig({
     // Публичные переменные (доступны на клиенте)
     public: {
       appName: 'Яхты Сочи',
-      telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME
+      telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || 'v-more_bot'
     }
   },
 

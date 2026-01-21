@@ -89,14 +89,43 @@ const isTimeSlotAvailable = computed(() => {
   })
 })
 
-// Time options
-const timeOptions = computed(() => {
-  const options = []
+// Check if a specific time slot is available
+const isSlotAvailable = (timeValue: string) => {
+  if (!boat.value?.bookedDates || !bookingDate.value) return true
+  
+  const [hours, minutes] = timeValue.split(':').map(Number)
+  const dateObj = bookingDate.value.toDate(getLocalTimeZone())
+  const startDate = new Date(dateObj)
+  startDate.setHours(hours, minutes, 0, 0)
+  const endDate = new Date(startDate.getTime() + bookingHours.value * 60 * 60 * 1000)
+  
+  return !boat.value.bookedDates.some(booking => {
+    const bookingStart = new Date(booking.start)
+    const bookingEnd = new Date(booking.end)
+    
+    // Check if there's any overlap
+    return (startDate < bookingEnd && endDate > bookingStart)
+  })
+}
+
+// Time slots with availability info
+const timeSlots = computed(() => {
+  const slots = []
   for (let h = 6; h <= 20; h++) {
-    options.push({ label: `${h}:00`, value: `${h}:00` })
-    options.push({ label: `${h}:30`, value: `${h}:30` })
+    const time1 = `${h}:00`
+    const time2 = `${h}:30`
+    slots.push({ 
+      label: time1, 
+      value: time1, 
+      available: isSlotAvailable(time1)
+    })
+    slots.push({ 
+      label: time2, 
+      value: time2, 
+      available: isSlotAvailable(time2)
+    })
   }
-  return options
+  return slots
 })
 
 // Hours options
@@ -441,28 +470,43 @@ onUnmounted(() => {
                 </div>
 
                 <div>
-                  <label for="booking-time" class="block text-sm font-medium mb-1">Время начала</label>
-                  <USelect
-                    id="booking-time"
-                    v-model="bookingTime"
-                    :items="timeOptions"
-                    class="w-full"
-                    :color="!isTimeSlotAvailable ? 'error' : 'primary'"
-                  />
-                  <UAlert
-                    v-if="bookingDate && bookingTime && !isTimeSlotAvailable"
-                    color="error"
-                    variant="subtle"
-                    icon="i-heroicons-exclamation-triangle"
-                    class="mt-2"
-                  >
-                    <template #title>
-                      Время занято
-                    </template>
-                    <template #description>
-                      Выбранное время уже забронировано. Пожалуйста, выберите другое время.
-                    </template>
-                  </UAlert>
+                  <label class="block text-sm font-medium mb-2">Время начала</label>
+                  <div class="grid grid-cols-4 gap-1.5">
+                    <button
+                      v-for="slot in timeSlots"
+                      :key="slot.value"
+                      type="button"
+                      :disabled="!slot.available"
+                      :class="[
+                        'px-2 py-1.5 rounded-lg text-sm font-medium transition-all border',
+                        slot.value === bookingTime
+                          ? 'bg-primary-500 text-white border-primary-500 ring-2 ring-primary-300'
+                          : slot.available
+                            ? 'bg-white dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-900/20 border-gray-200 dark:border-gray-700 hover:border-primary-300'
+                            : 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-600 cursor-not-allowed border-gray-200 dark:border-gray-700 line-through'
+                      ]"
+                      @click="slot.available && (bookingTime = slot.value)"
+                    >
+                      {{ slot.label }}
+                    </button>
+                  </div>
+                  <div v-if="bookingDate" class="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                    <span class="inline-flex items-center gap-1">
+                      <span class="w-3 h-3 rounded bg-primary-500"></span>
+                      Выбрано
+                    </span>
+                    <span class="inline-flex items-center gap-1">
+                      <span class="w-3 h-3 rounded bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600"></span>
+                      Свободно
+                    </span>
+                    <span class="inline-flex items-center gap-1">
+                      <span class="w-3 h-3 rounded bg-gray-200 dark:bg-gray-800 line-through"></span>
+                      Занято
+                    </span>
+                  </div>
+                  <p v-else class="text-xs text-gray-500 mt-2">
+                    Сначала выберите дату
+                  </p>
                 </div>
 
                 <div>

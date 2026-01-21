@@ -12,20 +12,58 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "webhookId": "booking-created"
     },
     {
       "parameters": {
         "chatId": "413553084",
-        "text": "=🆕 Новое бронирование!\n\n📋 Детали:\n• ID: {{ $json.body.data ? $json.body.data.bookingId : ($json.body.bookingId || 'N/A') }}\n• Клиент: {{ $json.body.data ? $json.body.data.customerName : ($json.body.customerName || 'Не указано') }}\n• Телефон: {{ $json.body.data ? $json.body.data.customerPhone : ($json.body.customerPhone || 'Не указано') }}\n• Яхта: {{ $json.body.data ? $json.body.data.boatName : ($json.body.boatName || 'Не указана') }}\n• Дата: {{ $json.body.data ? $json.body.data.startDate : ($json.body.startDate || 'Не указана') }}\n• Часов: {{ $json.body.data ? $json.body.data.hours : ($json.body.hours || '-') }}\n• Стоимость: {{ $json.body.data ? $json.body.data.totalPrice : ($json.body.totalPrice || '0') }} руб.",
-        "additionalFields": {}
+        "text": "=🆕 Новое бронирование!\n\n📋 Детали:\n• ID: {{ $json.body.data ? $json.body.data.bookingId : ($json.body.bookingId || 'N/A') }}\n• Клиент: {{ $json.body.data ? $json.body.data.customerName : ($json.body.customerName || 'Не указано') }}\n• Телефон: {{ $json.body.data ? $json.body.data.customerPhone : ($json.body.customerPhone || 'Не указано') }}\n• Яхта: {{ $json.body.data ? $json.body.data.boatName : ($json.body.boatName || 'Не указана') }}\n• Дата: {{ $json.body.data ? $json.body.data.startDate : ($json.body.startDate || 'Не указана') }}\n• Часов: {{ $json.body.data ? $json.body.data.hours : ($json.body.hours || '-') }}\n• Стоимость: {{ $json.body.data ? $json.body.data.totalPrice : ($json.body.totalPrice || '0') }} руб.\n\n⏳ Статус: Ожидает подтверждения",
+        "additionalFields": {
+          "replyMarkup": "inlineKeyboard",
+          "inlineKeyboard": {
+            "rows": [
+              {
+                "row": [
+                  {
+                    "text": "✅ Подтвердить",
+                    "additionalFields": {
+                      "callback_data": "=confirm_{{ $json.body.data ? $json.body.data.bookingId : ($json.body.bookingId || '') }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Отклонить",
+                    "additionalFields": {
+                      "callback_data": "=cancel_{{ $json.body.data ? $json.body.data.bookingId : ($json.body.bookingId || '') }}"
+                    }
+                  }
+                ]
+              },
+              {
+                "row": [
+                  {
+                    "text": "📞 Позвонить клиенту",
+                    "additionalFields": {
+                      "url": "=tel:{{ $json.body.data ? $json.body.data.customerPhone : ($json.body.customerPhone || '') }}"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
       },
       "id": "telegram-notify",
       "name": "Telegram",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [500, 300],
+      "position": [
+        500,
+        300
+      ],
       "credentials": {
         "telegramApi": {
           "id": "telegram-credentials",

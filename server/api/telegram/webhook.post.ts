@@ -1,6 +1,12 @@
 import crypto from 'crypto'
 import { prisma } from '~~/server/utils/db'
-import { sendTelegramMessage } from '~~/server/utils/telegram'
+import { 
+  sendTelegramMessage, 
+  editTelegramMessage, 
+  answerCallbackQuery,
+  sendBookingConfirmedNotification,
+  sendBookingCancelledNotification
+} from '~~/server/utils/telegram'
 
 interface TelegramUpdate {
   update_id: number
@@ -225,14 +231,28 @@ export default defineEventHandler(async (event) => {
 
       // Handle /help command
       if (text === '/help') {
+        const adminChatIdForHelp = config.telegramAdminChatId || '413553084'
+        const isAdminUser = String(user.id) === adminChatIdForHelp
+        
+        let helpText = `📚 <b>Помощь</b>\n\n` +
+          `/start - Начать работу с ботом\n` +
+          `/boats - Посмотреть каталог яхт\n` +
+          `/mybookings - Мои бронирования\n` +
+          `/help - Показать эту справку\n\n`
+        
+        if (isAdminUser) {
+          helpText += `🔐 <b>Команды менеджера:</b>\n` +
+            `/today - Бронирования на сегодня\n` +
+            `/tomorrow - Бронирования на завтра\n` +
+            `/pending - Ожидающие подтверждения\n` +
+            `/admin - Справка менеджера\n\n`
+        }
+        
+        helpText += `По всем вопросам: @support`
+
         await sendTelegramMessage({
           chat_id: chatId,
-          text: `📚 <b>Помощь</b>\n\n` +
-            `/start - Начать работу с ботом\n` +
-            `/boats - Посмотреть каталог яхт\n` +
-            `/mybookings - Мои бронирования\n` +
-            `/help - Показать эту справку\n\n` +
-            `По всем вопросам: @support`,
+          text: helpText,
           parse_mode: 'HTML'
         })
 
@@ -311,12 +331,386 @@ export default defineEventHandler(async (event) => {
 
         return { ok: true }
       }
+
+      // ============================================
+      // Manager/Admin Commands
+      // ============================================
+      const adminChatId = config.telegramAdminChatId || '413553084'
+      const isAdmin = String(user.id) === adminChatId
+
+      // Handle /today command (admin only) - bookings for today
+      if (text === '/today' && isAdmin) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const tomorrow = new Date(today)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+
+        const bookings = await prisma.booking.findMany({
+          where: {
+            startDate: {
+              gte: today,
+              lt: tomorrow
+            },
+            status: {
+              in: ['PENDING', 'CONFIRMED', 'PAID']
+            }
+          },
+          include: {
+            boat: { select: { name: true } }
+          },
+          orderBy: { startDate: 'asc' }
+        })
+
+        if (bookings.length === 0) {
+          await sendTelegramMessage({
+            chat_id: chatId,
+            text: '📅 <b>Бронирования на сегодня</b>\n\nНет бронирований на сегодня.',
+            parse_mode: 'HTML'
+          })
+        } else {
+          let responseText = `📅 <b>Бронирования на сегодня (${today.toLocaleDateString('ru-RU')}):</b>\n\n`
+
+          for (const booking of bookings) {
+            const time = booking.startDate.toLocaleTimeString('ru-RU', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+
+            responseText += `🕐 <b>${time}</b> - ${booking.boat.name}\n`
+            responseText += `   👤 ${booking.customerName}\n`
+            responseText += `   📱 ${booking.customerPhone}\n`
+            responseText += `   ⏱ ${booking.hours} ч. | 💰 ${booking.totalPrice.toLocaleString('ru-RU')} ₽\n`
+            responseText += `   ${getStatusEmoji(booking.status)}\n\n`
+          }
+
+          responseText += `<i>Всего: ${bookings.length} бронирований</i>`
+
+          await sendTelegramMessage({
+            chat_id: chatId,
+            text: responseText,
+            parse_mode: 'HTML'
+          })
+        }
+
+        return { ok: true }
+      }
+
+      // Handle /tomorrow command (admin only) - bookings for tomorrow
+      if (text === '/tomorrow' && isAdmin) {
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        tomorrow.setHours(0, 0, 0, 0)
+        const dayAfter = new Date(tomorrow)
+        dayAfter.setDate(dayAfter.getDate() + 1)
+
+        const bookings = await prisma.booking.findMany({
+          where: {
+            startDate: {
+              gte: tomorrow,
+              lt: dayAfter
+            },
+            status: {
+              in: ['PENDING', 'CONFIRMED', 'PAID']
+            }
+          },
+          include: {
+            boat: { select: { name: true } }
+          },
+          orderBy: { startDate: 'asc' }
+        })
+
+        if (bookings.length === 0) {
+          await sendTelegramMessage({
+            chat_id: chatId,
+            text: '📅 <b>Бронирования на завтра</b>\n\nНет бронирований на завтра.',
+            parse_mode: 'HTML'
+          })
+        } else {
+          let responseText = `📅 <b>Бронирования на завтра (${tomorrow.toLocaleDateString('ru-RU')}):</b>\n\n`
+
+          for (const booking of bookings) {
+            const time = booking.startDate.toLocaleTimeString('ru-RU', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+
+            responseText += `🕐 <b>${time}</b> - ${booking.boat.name}\n`
+            responseText += `   👤 ${booking.customerName}\n`
+            responseText += `   📱 ${booking.customerPhone}\n`
+            responseText += `   ⏱ ${booking.hours} ч. | 💰 ${booking.totalPrice.toLocaleString('ru-RU')} ₽\n`
+            responseText += `   ${getStatusEmoji(booking.status)}\n\n`
+          }
+
+          responseText += `<i>Всего: ${bookings.length} бронирований</i>`
+
+          await sendTelegramMessage({
+            chat_id: chatId,
+            text: responseText,
+            parse_mode: 'HTML'
+          })
+        }
+
+        return { ok: true }
+      }
+
+      // Handle /pending command (admin only) - pending bookings
+      if (text === '/pending' && isAdmin) {
+        const bookings = await prisma.booking.findMany({
+          where: {
+            status: 'PENDING'
+          },
+          include: {
+            boat: { select: { name: true } }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        })
+
+        if (bookings.length === 0) {
+          await sendTelegramMessage({
+            chat_id: chatId,
+            text: '⏳ <b>Ожидающие подтверждения</b>\n\nНет бронирований, ожидающих подтверждения.',
+            parse_mode: 'HTML'
+          })
+        } else {
+          let responseText = `⏳ <b>Ожидающие подтверждения:</b>\n\n`
+
+          for (const booking of bookings) {
+            const date = booking.startDate.toLocaleDateString('ru-RU')
+            const time = booking.startDate.toLocaleTimeString('ru-RU', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+
+            responseText += `🛥 <b>${booking.boat.name}</b>\n`
+            responseText += `   📅 ${date} в ${time}\n`
+            responseText += `   👤 ${booking.customerName}\n`
+            responseText += `   📱 ${booking.customerPhone}\n`
+            responseText += `   💰 ${booking.totalPrice.toLocaleString('ru-RU')} ₽\n\n`
+          }
+
+          responseText += `<i>Всего: ${bookings.length} ожидающих</i>`
+
+          await sendTelegramMessage({
+            chat_id: chatId,
+            text: responseText,
+            parse_mode: 'HTML'
+          })
+        }
+
+        return { ok: true }
+      }
+
+      // Handle /admin command - show admin help (admin only)
+      if (text === '/admin' && isAdmin) {
+        await sendTelegramMessage({
+          chat_id: chatId,
+          text: `🔐 <b>Команды менеджера</b>\n\n` +
+            `/today - Бронирования на сегодня\n` +
+            `/tomorrow - Бронирования на завтра\n` +
+            `/pending - Ожидающие подтверждения\n` +
+            `/admin - Показать эту справку\n\n` +
+            `<i>Для подтверждения/отмены используйте кнопки в уведомлениях о новых бронированиях.</i>`,
+          parse_mode: 'HTML'
+        })
+
+        return { ok: true }
+      }
     }
 
     // Handle callback query
     if (update.callback_query) {
       const { callback_query } = update
       const data = callback_query.data
+      const adminChatId = config.telegramAdminChatId || '413553084'
+      const isAdmin = String(callback_query.from.id) === adminChatId
+
+      // Handle booking confirmation (admin only)
+      if (data?.startsWith('confirm_') && isAdmin) {
+        const bookingId = data.replace('confirm_', '')
+        
+        try {
+          const booking = await prisma.booking.findUnique({
+            where: { id: bookingId },
+            include: { 
+              boat: { select: { name: true, pier: true } },
+              user: { select: { telegramId: true } }
+            }
+          })
+
+          if (!booking) {
+            await answerCallbackQuery({
+              callback_query_id: callback_query.id,
+              text: 'Бронирование не найдено',
+              show_alert: true
+            })
+            return { ok: true }
+          }
+
+          if (booking.status !== 'PENDING') {
+            await answerCallbackQuery({
+              callback_query_id: callback_query.id,
+              text: `Бронирование уже имеет статус: ${booking.status}`,
+              show_alert: true
+            })
+            return { ok: true }
+          }
+
+          // Update booking status
+          await prisma.booking.update({
+            where: { id: bookingId },
+            data: { 
+              status: 'CONFIRMED',
+              confirmedAt: new Date()
+            }
+          })
+
+          // Answer callback
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Бронирование подтверждено!'
+          })
+
+          // Update admin message
+          if (callback_query.message) {
+            const date = booking.startDate.toLocaleDateString('ru-RU')
+            const time = booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            
+            await editTelegramMessage({
+              chat_id: callback_query.message.chat.id,
+              message_id: callback_query.message.message_id,
+              text: `✅ <b>Бронирование подтверждено!</b>\n\n` +
+                `📋 Детали:\n` +
+                `• ID: ${bookingId}\n` +
+                `• Клиент: ${booking.customerName}\n` +
+                `• Телефон: ${booking.customerPhone}\n` +
+                `• Яхта: ${booking.boat.name}\n` +
+                `• Дата: ${date} в ${time}\n` +
+                `• Часов: ${booking.hours}\n` +
+                `• Стоимость: ${booking.totalPrice.toLocaleString('ru-RU')} руб.\n\n` +
+                `✅ Подтверждено: ${new Date().toLocaleString('ru-RU')}`,
+              parse_mode: 'HTML'
+            })
+          }
+
+          // Notify customer if they have Telegram connected
+          if (booking.user.telegramId && !booking.user.telegramId.startsWith('temp_')) {
+            const date = booking.startDate.toLocaleDateString('ru-RU')
+            const time = booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            
+            await sendBookingConfirmedNotification(booking.user.telegramId, {
+              id: booking.id,
+              boatName: booking.boat.name,
+              date,
+              time,
+              hours: booking.hours,
+              totalPrice: booking.totalPrice,
+              pier: booking.boat.pier || undefined
+            })
+          }
+
+          return { ok: true }
+        } catch (error) {
+          console.error('Error confirming booking:', error)
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Ошибка при подтверждении',
+            show_alert: true
+          })
+        }
+      }
+
+      // Handle booking cancellation (admin only)
+      if (data?.startsWith('cancel_') && isAdmin) {
+        const bookingId = data.replace('cancel_', '')
+        
+        try {
+          const booking = await prisma.booking.findUnique({
+            where: { id: bookingId },
+            include: { 
+              boat: { select: { name: true } },
+              user: { select: { telegramId: true } }
+            }
+          })
+
+          if (!booking) {
+            await answerCallbackQuery({
+              callback_query_id: callback_query.id,
+              text: 'Бронирование не найдено',
+              show_alert: true
+            })
+            return { ok: true }
+          }
+
+          if (booking.status === 'CANCELLED') {
+            await answerCallbackQuery({
+              callback_query_id: callback_query.id,
+              text: 'Бронирование уже отменено',
+              show_alert: true
+            })
+            return { ok: true }
+          }
+
+          // Update booking status
+          await prisma.booking.update({
+            where: { id: bookingId },
+            data: { 
+              status: 'CANCELLED',
+              cancelledAt: new Date()
+            }
+          })
+
+          // Answer callback
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Бронирование отменено'
+          })
+
+          // Update admin message
+          if (callback_query.message) {
+            const date = booking.startDate.toLocaleDateString('ru-RU')
+            const time = booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            
+            await editTelegramMessage({
+              chat_id: callback_query.message.chat.id,
+              message_id: callback_query.message.message_id,
+              text: `❌ <b>Бронирование отменено</b>\n\n` +
+                `📋 Детали:\n` +
+                `• ID: ${bookingId}\n` +
+                `• Клиент: ${booking.customerName}\n` +
+                `• Телефон: ${booking.customerPhone}\n` +
+                `• Яхта: ${booking.boat.name}\n` +
+                `• Дата: ${date} в ${time}\n` +
+                `• Часов: ${booking.hours}\n` +
+                `• Стоимость: ${booking.totalPrice.toLocaleString('ru-RU')} руб.\n\n` +
+                `❌ Отменено: ${new Date().toLocaleString('ru-RU')}`,
+              parse_mode: 'HTML'
+            })
+          }
+
+          // Notify customer if they have Telegram connected
+          if (booking.user.telegramId && !booking.user.telegramId.startsWith('temp_')) {
+            const date = booking.startDate.toLocaleDateString('ru-RU')
+            const time = booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            
+            await sendBookingCancelledNotification(booking.user.telegramId, {
+              id: booking.id,
+              boatName: booking.boat.name,
+              date,
+              time
+            })
+          }
+
+          return { ok: true }
+        } catch (error) {
+          console.error('Error cancelling booking:', error)
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Ошибка при отмене',
+            show_alert: true
+          })
+        }
+      }
 
       if (data === 'contact') {
         await sendTelegramMessage({

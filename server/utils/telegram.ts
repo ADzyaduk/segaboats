@@ -192,3 +192,137 @@ export async function sendBookingReminder(
     parse_mode: 'HTML'
   })
 }
+
+// Edit existing message
+export async function editTelegramMessage(params: {
+  chat_id: number | string
+  message_id: number
+  text: string
+  parse_mode?: 'HTML' | 'Markdown' | 'MarkdownV2'
+  reply_markup?: any
+}): Promise<boolean> {
+  try {
+    const botToken = getBotToken()
+    const url = `https://api.telegram.org/bot${botToken}/editMessageText`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(params)
+    })
+
+    const result = await response.json()
+    
+    if (!result.ok) {
+      console.error('Telegram editMessage error:', result)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error editing Telegram message:', error)
+    return false
+  }
+}
+
+// Answer callback query (for button clicks)
+export async function answerCallbackQuery(params: {
+  callback_query_id: string
+  text?: string
+  show_alert?: boolean
+}): Promise<boolean> {
+  try {
+    const botToken = getBotToken()
+    const url = `https://api.telegram.org/bot${botToken}/answerCallbackQuery`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(params)
+    })
+
+    const result = await response.json()
+    
+    if (!result.ok) {
+      console.error('Telegram answerCallbackQuery error:', result)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error answering callback query:', error)
+    return false
+  }
+}
+
+// Send booking confirmed notification to customer
+export async function sendBookingConfirmedNotification(
+  chatId: number | string,
+  booking: {
+    id: string
+    boatName: string
+    date: string
+    time: string
+    hours: number
+    totalPrice: number
+    pier?: string
+  }
+): Promise<boolean> {
+  const text = `
+✅ <b>Ваше бронирование подтверждено!</b>
+
+🛥 Яхта: ${booking.boatName}
+📅 Дата: ${booking.date}
+🕐 Время: ${booking.time}
+⏱ Продолжительность: ${booking.hours} ч.
+💰 Стоимость: ${booking.totalPrice.toLocaleString('ru-RU')} ₽
+${booking.pier ? `📍 Место: ${booking.pier}` : ''}
+
+📋 Номер брони: <code>${booking.id}</code>
+
+Приходите на причал за 15 минут до начала прогулки.
+Ждём вас! 🌊
+  `.trim()
+
+  return sendTelegramMessage({
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML'
+  })
+}
+
+// Send booking cancelled notification to customer
+export async function sendBookingCancelledNotification(
+  chatId: number | string,
+  booking: {
+    id: string
+    boatName: string
+    date: string
+    time: string
+  }
+): Promise<boolean> {
+  const text = `
+❌ <b>Бронирование отменено</b>
+
+К сожалению, ваше бронирование было отменено.
+
+🛥 Яхта: ${booking.boatName}
+📅 Дата: ${booking.date}
+🕐 Время: ${booking.time}
+
+📋 Номер брони: <code>${booking.id}</code>
+
+Если у вас есть вопросы, свяжитесь с нами.
+Вы всегда можете забронировать другое время! 🛥
+  `.trim()
+
+  return sendTelegramMessage({
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML'
+  })
+}

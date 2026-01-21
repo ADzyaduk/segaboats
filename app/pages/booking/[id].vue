@@ -11,7 +11,7 @@ const { data, error } = await useFetch(`/api/bookings/${bookingId}`)
 const booking = computed(() => data.value?.data)
 
 // Telegram bot link for notifications
-const telegramBotUsername = config.public.telegramBotUsername || 'YachtsSochiBot'
+const telegramBotUsername = config.public.telegramBotUsername || 'v-more_bot'
 const telegramNotifyLink = computed(() => {
   return `https://t.me/${telegramBotUsername}?start=booking_${bookingId}`
 })
