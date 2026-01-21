@@ -1,84 +1,137 @@
-# n8n Workflows для Яхты Сочи
+# n8n Workflows для Boats2026
 
-## Установка
+## Быстрый старт
 
-1. Откройте n8n UI: `https://v-more.store:5678` или через прокси
-2. Импортируйте workflows через меню: **Workflows → Import from File**
-
-## Настройка Credentials
-
-### 1. PostgreSQL Boats
-- **Type**: PostgreSQL
-- **Host**: `postgres` (имя сервиса в docker-compose)
-- **Port**: `5432`
-- **Database**: `boats2026`
-- **User**: `boats`
-- **Password**: `boats2026secret` (или из .env)
-
-### 2. OpenRouter API
-- **Type**: HTTP Header Auth
-- **Name**: `OpenRouter API`
-- **Header Name**: `Authorization`
-- **Header Value**: `Bearer YOUR_OPENROUTER_API_KEY`
-
-Получить ключ: https://openrouter.ai/keys
-
-### 3. Telegram Bot
-- **Type**: Telegram
-- **Bot Token**: Токен от @BotFather
-
-## Workflows
-
-### 1. `ai-booking-notification.json`
-**Умное уведомление о новом бронировании**
-
-- Триггер: Webhook POST `/webhook/booking-created`
-- AI генерирует персонализированное сообщение для админа
-- AI генерирует подтверждение для клиента (если есть Telegram)
-- Fallback: уведомление только админу
-
-### 2. `smart-booking-reminder.json`
-**Автоматические напоминания**
-
-- Триггер: Schedule (каждый час)
-- Проверяет бронирования на ближайшие 24 часа
-- AI генерирует персонализированное напоминание
-- Для клиентов без Telegram — уведомляет админа для ручного звонка
-
-### 3. `booking-created-notification.json` (legacy)
-Простое уведомление админу без AI.
-
-### 4. `booking-confirmed-customer.json` (legacy)
-Уведомление клиенту о подтверждении.
-
-## Переменные окружения
-
-Добавьте в `.env` на сервере:
-
-```env
-OPENROUTER_API_KEY=sk-or-v1-...
-TELEGRAM_ADMIN_CHAT_ID=123456789
+### 1. Доступ к n8n
+```
+URL: https://v-more.ru/n8n/
+Логин: admin
+Пароль: admin2026
 ```
 
-`TELEGRAM_ADMIN_CHAT_ID` — ID чата/группы для уведомлений админа.
-Узнать свой chat_id: напишите боту @userinfobot
+### 2. Создание Credentials (ОБЯЗАТЕЛЬНО!)
+
+Перед импортом workflow нужно создать credentials в **Settings → Credentials**:
+
+#### Telegram Bot API
+1. Нажми "Add Credential" → выбери "Telegram"
+2. Название: `Telegram Bot`
+3. Bot Token: `твой_токен_от_BotFather`
+4. Сохрани
+
+#### PostgreSQL (для напоминаний)
+1. Нажми "Add Credential" → выбери "Postgres"
+2. Название: `PostgreSQL`
+3. Host: `db`
+4. Database: `boats2026`
+5. User: `boats`
+6. Password: `boats2026_db_password` (из .env)
+7. Port: `5432`
+8. SSL: `disable`
+9. Сохрани
+
+### 3. Импорт Workflows
+
+1. В n8n: **Workflows → Import from File**
+2. Импортируй нужные файлы:
+
+| Файл | Описание | Webhook путь |
+|------|----------|--------------|
+| `simple-test-webhook.json` | Тест Telegram | `/webhook/test` |
+| `booking-created-notification.json` | Новое бронирование | `/webhook/booking-created` |
+| `booking-confirmed-customer.json` | Подтверждение клиенту | `/webhook/booking-confirmed` |
+| `ai-booking-notification.json` | AI-уведомление | `/webhook/booking-ai` |
+| `smart-booking-reminder.json` | Напоминания (по расписанию) | - |
+
+### 4. Настройка Chat ID
+
+**ВАЖНО!** После импорта замени Chat ID в Telegram нодах на свой:
+
+1. Открой workflow
+2. Нажми на ноду "Telegram"
+3. В поле "Chat ID" укажи свой ID
+
+**Как узнать свой Chat ID:**
+- Напиши боту [@userinfobot](https://t.me/userinfobot) в Telegram
+- Он ответит твоим ID (число типа `413553084`)
+
+### 5. Привязка Credentials
+
+После импорта нужно привязать credentials к нодам:
+
+1. Открой workflow
+2. Нажми на ноду с красным предупреждением
+3. В поле "Credential" выбери созданный credential
+4. Повтори для всех нод
+
+### 6. Активация
+
+**КРИТИЧЕСКИ ВАЖНО!** Workflow не работает пока не активирован:
+
+1. Открой workflow
+2. В правом верхнем углу переключи **"Inactive" → "Active"**
+3. Должна появиться зелёная точка
 
 ## Тестирование
 
+### Тест Telegram соединения
 ```bash
-# Тест webhook
-curl -X POST https://v-more.store/webhook/booking-created \
+curl -X POST https://v-more.ru/webhook/test \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Привет из curl!"}'
+```
+
+### Тест уведомления о бронировании
+```bash
+curl -X POST https://v-more.ru/webhook/booking-created \
   -H "Content-Type: application/json" \
   -d '{
     "event": "booking.created",
     "data": {
-      "bookingId": "test123",
-      "customerName": "Иван Тест",
+      "bookingId": "test-123",
+      "customerName": "Иван Иванов",
       "customerPhone": "+7 900 123-45-67",
       "boatName": "Яхта Мечта",
-      "startDate": "2026-01-25 14:00",
-      "hours": 3,
-      "totalPrice": 15000
+      "startDate": "2026-01-25T10:00:00Z",
+      "hours": 4,
+      "totalPrice": 12000
     }
   }'
 ```
+
+## Структура данных
+
+### Бронирование (booking-created)
+```json
+{
+  "event": "booking.created",
+  "data": {
+    "bookingId": "uuid",
+    "boatId": "uuid",
+    "boatName": "string",
+    "customerName": "string",
+    "customerPhone": "string",
+    "startDate": "ISO date",
+    "hours": "number",
+    "totalPrice": "number"
+  },
+  "timestamp": "ISO date"
+}
+```
+
+## Troubleshooting
+
+### Webhook не срабатывает
+1. Проверь что workflow **Active** (зелёная точка)
+2. Проверь Executions → там должна быть запись
+3. Посмотри логи: `docker logs boats2026-n8n`
+
+### Telegram не отправляет
+1. Проверь правильность Bot Token
+2. Проверь Chat ID
+3. Убедись что бот добавлен в чат (если это группа)
+
+### Ошибка credentials
+1. Открой workflow
+2. Нажми на проблемную ноду
+3. Выбери/создай credential заново
