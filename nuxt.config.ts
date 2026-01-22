@@ -51,7 +51,7 @@ export default defineNuxtConfig({
         { property: 'og:type', content: 'website' },
         { property: 'og:site_name', content: 'В Море!' },
         { property: 'og:locale', content: 'ru_RU' },
-        { property: 'og:image', content: '/log.png' },
+        { property: 'og:image', content: '/logo.png' },
         { name: 'theme-color', content: '#3b82f6' },
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },

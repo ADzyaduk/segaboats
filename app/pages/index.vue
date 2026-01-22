@@ -128,17 +128,12 @@ const stats = [
 <template>
   <div>
     <!-- Hero Section -->
-    <section class="relative overflow-hidden min-h-[500px] sm:min-h-[600px] md:min-h-[700px] flex items-center" aria-label="Главная секция">
-      <!-- Background Image with Overlay -->
-      <div class="absolute inset-0">
-        <img
-          src="/img/hero.jpg"
-          alt="Яхты в Сочи"
-          class="absolute inset-0 w-full h-full object-cover"
-          loading="eager"
-        />
-        <div class="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/65 dark:from-black/40 dark:via-black/40 dark:to-black/40 z-10"></div>
-      </div>
+    <section 
+      class="relative overflow-hidden min-h-[500px] sm:min-h-[600px] md:min-h-[700px] flex items-center hero-bg" 
+      aria-label="Главная секция"
+    >
+      <!-- Overlay -->
+      <div class="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/65 dark:from-black/40 dark:via-black/40 dark:to-black/40 z-10"></div>
 
       <UContainer class="relative z-30 py-20 md:py-32">
         <div class="max-w-3xl mx-auto text-center">
@@ -367,17 +362,9 @@ const stats = [
     </section>
 
     <!-- CTA -->
-    <section class="relative overflow-hidden py-20 md:py-32">
-      <!-- Background Image with Overlay -->
-      <div class="absolute inset-0">
-        <img
-          src="/img/hero.jpg"
-          alt="Яхты в Сочи"
-          class="absolute inset-0 w-full h-full object-cover"
-          loading="lazy"
-        />
-        <div class="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/65 dark:from-black/40 dark:via-black/40 dark:to-black/40 z-10"></div>
-      </div>
+    <section class="relative overflow-hidden py-20 md:py-32 hero-bg">
+      <!-- Overlay -->
+      <div class="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/65 dark:from-black/40 dark:via-black/40 dark:to-black/40 z-10"></div>
 
       <UContainer class="relative z-20 text-center">
         <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white" style="text-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.9);">
@@ -412,3 +399,19 @@ const stats = [
     </section>
   </div>
 </template>
+
+<style scoped>
+.hero-bg {
+  background-image: url('/img/hero.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+@media (max-width: 768px) {
+  .hero-bg {
+    background-attachment: scroll;
+  }
+}
+</style>

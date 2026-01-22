@@ -26,7 +26,7 @@ const navItems = [
             <!-- Logo -->
             <NuxtLink to="/" class="flex items-center gap-3">
               <NuxtImg
-                src="/log.png"
+                src="/logo.png"
                 alt="В Море!"
                 class="h-16 w-auto md:h-20"
                 width="80"
@@ -125,7 +125,7 @@ const navItems = [
             <div>
               <div class="flex items-center gap-4 mb-6">
                 <NuxtImg
-                  src="/log.png"
+                  src="/logo.png"
                   alt="В Море!"
                   class="h-32 w-auto md:h-40"
                   width="160"
