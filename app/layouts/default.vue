@@ -24,17 +24,17 @@ const navItems = [
         <UContainer>
           <div class="flex items-center justify-between h-16">
             <!-- Logo -->
-            <NuxtLink to="/" class="flex items-center gap-2">
+            <NuxtLink to="/" class="flex items-center gap-3">
               <NuxtImg
                 src="/log.png"
                 alt="В Море!"
-                class="h-8 w-auto"
-                width="32"
-                height="32"
+                class="h-12 w-auto md:h-14"
+                width="56"
+                height="56"
                 loading="eager"
                 preload
               />
-              <span class="font-bold text-xl text-gray-900 dark:text-white">
+              <span class="font-bold text-xl md:text-2xl text-gray-900 dark:text-white">
                 В Море!
               </span>
             </NuxtLink>
@@ -123,16 +123,16 @@ const navItems = [
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Brand -->
             <div>
-              <div class="flex items-center gap-2 mb-4">
+              <div class="flex items-center gap-3 mb-4">
                 <NuxtImg
                   src="/log.png"
                   alt="В Море!"
-                  class="h-8 w-auto"
-                  width="32"
-                  height="32"
+                  class="h-16 w-auto"
+                  width="64"
+                  height="64"
                   loading="lazy"
                 />
-                <span class="font-bold text-xl text-white">В Море!</span>
+                <span class="font-bold text-2xl text-white">В Море!</span>
               </div>
               <p class="text-gray-400">
                 Аренда яхт и катеров в Сочи. Незабываемые морские прогулки, рыбалка и праздники на воде.

@@ -59,9 +59,8 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'icon', type: 'image/png', href: '/favico.png' },
-        { rel: 'apple-touch-icon', href: '/favico.png' },
-        { rel: 'shortcut icon', href: '/favicon.ico' }
+        { rel: 'shortcut icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/favicon.ico' }
       ]
     }
   },
