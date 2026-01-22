@@ -58,9 +58,16 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' }
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'shortcut icon', href: '/favicon.ico' },
-        { rel: 'apple-touch-icon', href: '/favicon.ico' }
+        // Standard favicon (for all browsers) - with cache busting to force refresh
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=2' },
+        { rel: 'shortcut icon', type: 'image/x-icon', href: '/favicon.ico?v=2' },
+        // Specify the actual size (120x120)
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=2', sizes: '120x120' },
+        // Additional standard sizes for compatibility (browsers will scale)
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=2', sizes: '32x32' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=2', sizes: '16x16' },
+        // Apple touch icon (iOS) - 120x120 is perfect for this
+        { rel: 'apple-touch-icon', href: '/favicon.ico?v=2', sizes: '120x120' }
       ]
     }
   },
