@@ -131,7 +131,16 @@ const stats = [
     <section class="relative overflow-hidden min-h-[500px] sm:min-h-[600px] md:min-h-[700px] flex items-center" aria-label="Главная секция">
       <!-- Background Image with Overlay -->
       <div class="absolute inset-0">
-        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1920&q=80')] bg-cover bg-center bg-no-repeat"></div>
+        <NuxtImg
+          src="/img/hero.jpg"
+          alt="Яхты в Сочи"
+          class="absolute inset-0 w-full h-full object-cover"
+          format="webp"
+          quality="85"
+          sizes="100vw"
+          loading="eager"
+          preload
+        />
         <div class="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/65 dark:from-black/40 dark:via-black/40 dark:to-black/40 z-10"></div>
       </div>
 
@@ -365,7 +374,15 @@ const stats = [
     <section class="relative overflow-hidden py-20 md:py-32">
       <!-- Background Image with Overlay -->
       <div class="absolute inset-0">
-        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1920&q=80')] bg-cover bg-center bg-no-repeat"></div>
+        <NuxtImg
+          src="/img/hero.jpg"
+          alt="Яхты в Сочи"
+          class="absolute inset-0 w-full h-full object-cover"
+          format="webp"
+          quality="85"
+          sizes="100vw"
+          loading="lazy"
+        />
         <div class="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/65 dark:from-black/40 dark:via-black/40 dark:to-black/40 z-10"></div>
       </div>
 

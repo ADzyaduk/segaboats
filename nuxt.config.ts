@@ -26,8 +26,8 @@ export default defineNuxtConfig({
 
     // Публичные переменные (доступны на клиенте)
     public: {
-      appName: 'Яхты Сочи',
-      telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || 'v-more_bot'
+      appName: 'В Море!',
+      telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || 'SochiBoatsbot'
     }
   },
 
@@ -40,17 +40,18 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'ru'
       },
-      title: 'Яхты Сочи - Аренда яхт',
-      titleTemplate: '%s | Яхты Сочи',
+      title: 'В Море! - Аренда яхт в Сочи',
+      titleTemplate: '%s | В Море!',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=5' },
         { name: 'description', content: 'Аренда яхт в Сочи - прогулки по морю, рыбалка, праздники. Онлайн бронирование яхт и катеров с капитаном.' },
         { name: 'keywords', content: 'аренда яхт, сочи, катера, катамараны, морские прогулки, рыбалка' },
-        { name: 'author', content: 'Яхты Сочи' },
+        { name: 'author', content: 'В Море!' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:site_name', content: 'Яхты Сочи' },
+        { property: 'og:site_name', content: 'В Море!' },
         { property: 'og:locale', content: 'ru_RU' },
+        { property: 'og:image', content: '/log.png' },
         { name: 'theme-color', content: '#3b82f6' },
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
@@ -58,7 +59,9 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'apple-touch-icon', href: '/favicon.ico' }
+        { rel: 'icon', type: 'image/png', href: '/favico.png' },
+        { rel: 'apple-touch-icon', href: '/favico.png' },
+        { rel: 'shortcut icon', href: '/favicon.ico' }
       ]
     }
   },
@@ -156,7 +159,7 @@ export default defineNuxtConfig({
     // Отключаем автоматическую загрузку шрифтов из внешних источников
     fonts: false
   },
-  
+
   // Отключаем все внешние провайдеры шрифтов
   fonts: {
     providers: {

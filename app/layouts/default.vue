@@ -4,7 +4,7 @@ const colorMode = useColorMode()
 
 // SEO defaults
 useHead({
-  titleTemplate: '%s | Яхты Сочи'
+  titleTemplate: '%s | В Море!'
 })
 
 // Navigation items for bottom nav
@@ -25,9 +25,17 @@ const navItems = [
           <div class="flex items-center justify-between h-16">
             <!-- Logo -->
             <NuxtLink to="/" class="flex items-center gap-2">
-              <span class="text-2xl">🛥️</span>
+              <NuxtImg
+                src="/log.png"
+                alt="В Море!"
+                class="h-8 w-auto"
+                width="32"
+                height="32"
+                loading="eager"
+                preload
+              />
               <span class="font-bold text-xl text-gray-900 dark:text-white">
-                Яхты Сочи
+                В Море!
               </span>
             </NuxtLink>
 
@@ -116,8 +124,15 @@ const navItems = [
             <!-- Brand -->
             <div>
               <div class="flex items-center gap-2 mb-4">
-                <span class="text-2xl">🛥️</span>
-                <span class="font-bold text-xl text-white">Яхты Сочи</span>
+                <NuxtImg
+                  src="/log.png"
+                  alt="В Море!"
+                  class="h-8 w-auto"
+                  width="32"
+                  height="32"
+                  loading="lazy"
+                />
+                <span class="font-bold text-xl text-white">В Море!</span>
               </div>
               <p class="text-gray-400">
                 Аренда яхт и катеров в Сочи. Незабываемые морские прогулки, рыбалка и праздники на воде.

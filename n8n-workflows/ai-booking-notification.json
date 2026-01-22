@@ -40,9 +40,41 @@
     },
     {
       "parameters": {
-        "chatId": "413553084",
-        "text": "={{ $json.choices[0].message.content }}\n\n━━━━━━━━━━━━━━━\n📋 ID: {{ $('Webhook: Новое бронирование').item.json.body.data.bookingId }}\n📞 Связаться: {{ $('Webhook: Новое бронирование').item.json.body.data.customerPhone }}",
-        "additionalFields": {}
+        "chatId": "1231157381",
+        "text": "={{ $json.choices[0].message.content }}\n\n━━━━━━━━━━━━━━━\n📋 ID: {{ $('Webhook: Новое бронирование').item.json.body.data.bookingId }}\n📞 Связаться: {{ $('Webhook: Новое бронирование').item.json.body.data.customerPhone }}\n\n⏳ Статус: Ожидает подтверждения",
+        "additionalFields": {
+          "replyMarkup": "inlineKeyboard",
+          "inlineKeyboard": {
+            "rows": [
+              {
+                "row": [
+                  {
+                    "text": "✅ Подтвердить",
+                    "additionalFields": {
+                      "callback_data": "=confirm_{{ $('Webhook: Новое бронирование').item.json.body.data ? $('Webhook: Новое бронирование').item.json.body.data.bookingId : ($('Webhook: Новое бронирование').item.json.body.bookingId || '') }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Отклонить",
+                    "additionalFields": {
+                      "callback_data": "=cancel_{{ $('Webhook: Новое бронирование').item.json.body.data ? $('Webhook: Новое бронирование').item.json.body.data.bookingId : ($('Webhook: Новое бронирование').item.json.body.bookingId || '') }}"
+                    }
+                  }
+                ]
+              },
+              {
+                "row": [
+                  {
+                    "text": "📞 Позвонить клиенту",
+                    "additionalFields": {
+                      "url": "=tel:{{ $('Webhook: Новое бронирование').item.json.body.data ? $('Webhook: Новое бронирование').item.json.body.data.customerPhone : ($('Webhook: Новое бронирование').item.json.body.customerPhone || '') }}"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
       },
       "id": "telegram-admin",
       "name": "Telegram: Админу",
@@ -110,6 +142,6 @@
   "staticData": null,
   "tags": ["booking", "notification", "ai"],
   "triggerCount": 0,
-  "updatedAt": "2026-01-21T15:00:00.000Z",
-  "versionId": "2"
+  "updatedAt": "2026-01-21T16:00:00.000Z",
+  "versionId": "3"
 }
