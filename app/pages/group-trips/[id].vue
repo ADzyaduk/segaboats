@@ -495,15 +495,16 @@ useSeoMeta({
             </div>
           </UCard>
 
-          <!-- Ticket Selection Header -->
-          <div class="pb-3 border-b-2 border-primary-200 dark:border-primary-800 mb-4">
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
-              Выберите количество билетов
-            </h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Детские билеты (до 12 лет) - скидка 50%
-            </p>
-          </div>
+          <!-- Ticket Selection - ПЕРЕД полями имени -->
+          <div class="bg-primary-50 dark:bg-primary-950/30 p-4 rounded-lg border-2 border-primary-200 dark:border-primary-800">
+            <div class="pb-3 border-b-2 border-primary-300 dark:border-primary-700 mb-4">
+              <h3 class="text-xl font-bold text-primary-900 dark:text-primary-100 mb-1">
+                🎫 Выберите количество билетов
+              </h3>
+              <p class="text-sm text-primary-700 dark:text-primary-300">
+                Детские билеты (до 12 лет) - скидка 50%
+              </p>
+            </div>
 
           <!-- Adult Tickets -->
           <div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg mb-3">
@@ -585,28 +586,31 @@ useSeoMeta({
                 </div>
               </div>
             </div>
-            <p class="text-xs text-gray-500 mt-2">
+            <p class="text-xs text-primary-600 dark:text-primary-400 mt-2">
               Детский билет стоит 50% от взрослого
             </p>
           </div>
 
           <!-- Total -->
-          <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+          <div class="pt-3 border-t-2 border-primary-300 dark:border-primary-700 mt-4">
             <div class="flex justify-between items-center">
-              <span class="font-medium text-gray-900 dark:text-white">
+              <span class="font-bold text-lg text-primary-900 dark:text-primary-100">
                 Итого ({{ totalTickets }} {{ totalTickets === 1 ? 'билет' : totalTickets < 5 ? 'билета' : 'билетов' }}):
               </span>
-              <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+              <span class="text-3xl font-bold text-primary-700 dark:text-primary-300">
                 {{ formatPrice(totalPrice) }}
               </span>
             </div>
-            <p v-if="totalTickets === 0" class="text-xs text-error-500 mt-1">
-              Выберите хотя бы один билет
+            <p v-if="totalTickets === 0" class="text-xs text-error-600 dark:text-error-400 mt-2 font-semibold">
+              ⚠️ Выберите хотя бы один билет
             </p>
-            <p v-else-if="totalTickets > maxTickets" class="text-xs text-error-500 mt-1">
-              Можно заказать не более {{ maxTickets }} билетов (доступно мест: {{ trip?.availableSeats || 0 }})
+            <p v-else-if="totalTickets > maxTickets" class="text-xs text-error-600 dark:text-error-400 mt-2 font-semibold">
+              ⚠️ Можно заказать не более {{ maxTickets }} билетов (доступно мест: {{ trip?.availableSeats || 0 }})
             </p>
           </div>
+          </div>
+
+          <hr class="my-6 border-2 border-gray-300 dark:border-gray-600" />
 
           <!-- Customer Info -->
           <div>

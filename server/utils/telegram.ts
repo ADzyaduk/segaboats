@@ -28,19 +28,33 @@ export interface TelegramMessage {
 function getBotToken(): string {
   try {
     const config = useRuntimeConfig()
-    const token = config.telegramBotToken
+    console.log('[telegram] 🔍 Checking runtime config for bot token...')
+    console.log('[telegram] Config keys:', Object.keys(config))
+    console.log('[telegram] telegramBotToken from config:', config.telegramBotToken ? `${String(config.telegramBotToken).substring(0, 10)}...` : 'NOT SET')
+    console.log('[telegram] process.env.TELEGRAM_BOT_TOKEN:', process.env.TELEGRAM_BOT_TOKEN ? 'SET' : 'NOT SET')
+    console.log('[telegram] process.env.NUXT_TELEGRAM_BOT_TOKEN:', process.env.NUXT_TELEGRAM_BOT_TOKEN ? 'SET' : 'NOT SET')
+    
+    // Try different sources
+    const token = config.telegramBotToken || 
+                  process.env.NUXT_TELEGRAM_BOT_TOKEN || 
+                  process.env.TELEGRAM_BOT_TOKEN
     
     if (!token) {
-      console.error('[telegram] ❌ TELEGRAM_BOT_TOKEN is not configured in runtime config')
+      console.error('[telegram] ❌ TELEGRAM_BOT_TOKEN is not configured')
+      console.error('[telegram] Checked sources:')
+      console.error('[telegram]   - config.telegramBotToken:', config.telegramBotToken ? 'SET' : 'NOT SET')
+      console.error('[telegram]   - process.env.NUXT_TELEGRAM_BOT_TOKEN:', process.env.NUXT_TELEGRAM_BOT_TOKEN ? 'SET' : 'NOT SET')
+      console.error('[telegram]   - process.env.TELEGRAM_BOT_TOKEN:', process.env.TELEGRAM_BOT_TOKEN ? 'SET' : 'NOT SET')
       throw new Error('TELEGRAM_BOT_TOKEN is not configured')
     }
     
     const tokenStr = String(token).trim()
-    if (!tokenStr || tokenStr === 'undefined' || tokenStr === 'null') {
+    if (!tokenStr || tokenStr === 'undefined' || tokenStr === 'null' || tokenStr === '') {
       console.error('[telegram] ❌ TELEGRAM_BOT_TOKEN is invalid:', token)
       throw new Error('TELEGRAM_BOT_TOKEN is invalid')
     }
     
+    console.log('[telegram] ✓ Bot token found (length:', tokenStr.length, ')')
     return tokenStr
   } catch (error: any) {
     console.error('[telegram] ❌ Error getting bot token:', error?.message)

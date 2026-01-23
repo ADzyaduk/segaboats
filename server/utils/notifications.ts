@@ -12,34 +12,26 @@ import {
 } from './telegram'
 
 // Get admin chat ID from config (exported for testing)
+// Uses the same logic as test-notification endpoint
 export function getAdminChatId(): string | null {
   try {
     const config = useRuntimeConfig()
-    console.log('[notifications] 🔍 Checking runtime config for admin chat ID...')
-    console.log('[notifications] Config keys:', Object.keys(config))
     
-    // Try different possible property names and sources
-    const adminChatId = config.telegramAdminChatId || 
-                       config.TELEGRAM_ADMIN_CHAT_ID || 
-                       process.env.TELEGRAM_ADMIN_CHAT_ID || 
-                       process.env.NUXT_TELEGRAM_ADMIN_CHAT_ID
+    // Use the same logic as test-notification endpoint
+    const adminChatId = config.telegramAdminChatId
     
-    console.log('[notifications] Admin chat ID value:', adminChatId, 'Type:', typeof adminChatId)
-    
-    if (!adminChatId) {
+    if (!adminChatId || String(adminChatId) === 'undefined' || String(adminChatId) === 'null') {
       console.error('[notifications] ❌ TELEGRAM_ADMIN_CHAT_ID not configured in runtime config')
-      console.error('[notifications] Check .env file and ensure TELEGRAM_ADMIN_CHAT_ID is set')
-      console.error('[notifications] Also check nuxt.config.ts runtimeConfig section')
+      console.error('[notifications] config.telegramAdminChatId:', adminChatId)
       return null
     }
     
     const chatIdStr = String(adminChatId).trim()
-    if (!chatIdStr || chatIdStr === 'undefined' || chatIdStr === 'null') {
+    if (!chatIdStr || chatIdStr === '') {
       console.error('[notifications] ❌ TELEGRAM_ADMIN_CHAT_ID is invalid:', adminChatId)
       return null
     }
     
-    console.log('[notifications] ✓ Admin chat ID configured:', chatIdStr)
     return chatIdStr
   } catch (error) {
     console.error('[notifications] ❌ Error getting admin chat ID:', error)
