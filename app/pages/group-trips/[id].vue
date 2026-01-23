@@ -1,6 +1,17 @@
 <script setup lang="ts">
 const route = useRoute()
-const { fetchTrip, currentTrip, purchaseTicket, getTripTypeLabel, formatDuration, isLoading } = useGroupTrips()
+
+// ✅ ОДИН вызов composable
+const {
+  fetchTrip,
+  currentTrip,
+  purchaseTicket,
+  getTripTypeLabel,
+  formatDuration,
+  formatPrice,
+  isLoading
+} = useGroupTrips()
+
 const { isTelegram, user: telegramUser } = useTelegram()
 const toast = useNotificationToast()
 const { validatePhone } = usePhoneValidation()
@@ -13,11 +24,14 @@ const trip = computed(() => currentTrip.value)
 // Booking form
 const showBookingSlideover = ref(false)
 const isSubmitting = ref(false)
+
 const customerName = ref('')
 const customerPhone = ref('')
 const customerEmail = ref('')
+
 const adultTickets = ref(1)
 const childTickets = ref(0)
+
 const phoneError = ref<string | null>(null)
 
 const onPhoneInput = (event: Event) => {
@@ -40,18 +54,21 @@ const openBookingSlideover = () => {
 }
 
 const onPhoneBlur = () => {
-  if (customerPhone.value) {
-    const validation = validatePhone(customerPhone.value)
-    customerPhone.value = validation.formatted
-    
-    if (!validation.isValid) {
-      phoneError.value = validation.error || 'Некорректный формат телефона'
-    } else {
-      phoneError.value = null
-    }
+  if (!customerPhone.value) return
+
+  const validation = validatePhone(customerPhone.value)
+  customerPhone.value = validation.formatted
+
+  if (!validation.isValid) {
+    phoneError.value = validation.error || 'Некорректный формат телефона'
+  } else {
+    phoneError.value = null
   }
 }
 
+// =====================
+// PURCHASE
+// =====================
 const handlePurchase = async () => {
   if (!trip.value) return
 
@@ -60,35 +77,30 @@ const handlePurchase = async () => {
     return
   }
 
-  // Validate
   if (!customerName.value.trim() || !customerPhone.value.trim()) {
     toast.error('Ошибка', 'Заполните все обязательные поля')
     return
   }
 
-  const totalTickets = adultTickets.value + childTickets.value
-  if (totalTickets < 1) {
+  const total = adultTickets.value + childTickets.value
+
+  if (total < 1) {
     toast.error('Ошибка', 'Выберите хотя бы один билет')
     return
   }
-  if (totalTickets > 10) {
+
+  if (total > 10) {
     toast.error('Ошибка', 'Можно заказать не более 10 билетов')
     return
   }
 
-  if (totalTickets > trip.value.availableSeats) {
+  if (total > trip.value.availableSeats) {
     toast.error('Ошибка', `Доступно только ${trip.value.availableSeats} мест`)
     return
   }
 
-  // Validate prices
-  if (adultPrice.value <= 0) {
-    toast.error('Ошибка', 'Некорректная цена билета. Обратитесь к администратору.')
-    return
-  }
-
   if (totalPrice.value <= 0) {
-    toast.error('Ошибка', 'Ошибка расчета стоимости. Проверьте количество билетов.')
+    toast.error('Ошибка', 'Ошибка расчета стоимости')
     return
   }
 
@@ -112,12 +124,15 @@ const handlePurchase = async () => {
     })
 
     if (ticket) {
-      const ticketCount = adultTickets.value + childTickets.value
-      const ticketText = ticketCount === 1 ? 'билет' : ticketCount < 5 ? 'билета' : 'билетов'
+      const count = total
+      const text =
+        count === 1 ? 'билет' : count < 5 ? 'билета' : 'билетов'
+
       toast.success(
-        'Билеты заказаны!', 
-        `Заказано ${ticketCount} ${ticketText}. Мы свяжемся с вами для подтверждения`
+        'Билеты заказаны!',
+        `Заказано ${count} ${text}. Мы свяжемся с вами для подтверждения`
       )
+
       showBookingSlideover.value = false
       await navigateTo(`/my-tickets/${ticket.id}`)
     }
@@ -128,95 +143,56 @@ const handlePurchase = async () => {
   }
 }
 
-// Calculate prices
+// =====================
+// PRICES
+// =====================
 const adultPrice = computed(() => {
   const price = trip.value?.price
-  if (!price || price <= 0) {
-    console.warn('[tickets] Invalid trip price:', price)
-    return 0
-  }
-  // Ensure price is a number
-  const numPrice = typeof price === 'string' ? parseFloat(price) : Number(price)
-  if (isNaN(numPrice) || numPrice <= 0) {
-    console.warn('[tickets] Invalid numeric price:', numPrice)
-    return 0
-  }
-  return numPrice
+  const num = typeof price === 'string' ? Number(price) : price
+  return num && num > 0 ? num : 0
 })
 
-const childPrice = computed(() => {
-  const halfPrice = Math.floor(adultPrice.value * 0.5) // 50% от взрослого
-  return halfPrice
-})
+const childPrice = computed(() => Math.floor(adultPrice.value * 0.5))
 
-const adultTotal = computed(() => {
-  const total = adultPrice.value * adultTickets.value
-  console.log('[tickets] Adult total calculation:', {
-    adultPrice: adultPrice.value,
-    adultTickets: adultTickets.value,
-    total
-  })
-  return total
-})
+const adultTotal = computed(() => adultPrice.value * adultTickets.value)
+const childTotal = computed(() => childPrice.value * childTickets.value)
 
-const childTotal = computed(() => {
-  const total = childPrice.value * childTickets.value
-  console.log('[tickets] Child total calculation:', {
-    childPrice: childPrice.value,
-    childTickets: childTickets.value,
-    total
-  })
-  return total
-})
+const totalPrice = computed(() => adultTotal.value + childTotal.value)
+const totalTickets = computed(() => adultTickets.value + childTickets.value)
 
-// Calculate total price
-const totalPrice = computed(() => {
-  const total = adultTotal.value + childTotal.value
-  console.log('[tickets] Total price calculation:', {
-    adultTotal: adultTotal.value,
-    childTotal: childTotal.value,
-    total,
-    adultTickets: adultTickets.value,
-    childTickets: childTickets.value
-  })
-  return total
-})
-
-const totalTickets = computed(() => {
-  return adultTickets.value + childTickets.value
-})
-
-// Max quantity based on available seats
 const maxTickets = computed(() => {
   if (!trip.value) return 10
   return Math.min(10, trip.value.availableSeats)
 })
 
-const formatDate = (date: Date | string) => {
-  return new Date(date).toLocaleDateString('ru-RU', {
+// =====================
+// FORMATTERS
+// =====================
+const formatDate = (date: Date | string) =>
+  new Date(date).toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
   })
-}
 
 const formatTime = (date: Date | string, time?: string) => {
-  if (time) {
-    return time
-  }
+  if (time) return time
   return new Date(date).toLocaleTimeString('ru-RU', {
     hour: '2-digit',
     minute: '2-digit'
   })
 }
 
-// Format price helper
-const { formatPrice } = useGroupTrips()
-
 // SEO
 useSeoMeta({
-  title: () => trip.value ? `${getTripTypeLabel(trip.value.type)} - Групповая поездка` : 'Групповая поездка',
-  description: () => trip.value ? `Купить билет на групповую поездку: ${getTripTypeLabel(trip.value.type)}` : 'Групповая поездка'
+  title: () =>
+    trip.value
+      ? `${getTripTypeLabel(trip.value.type)} - Групповая поездка`
+      : 'Групповая поездка',
+  description: () =>
+    trip.value
+      ? `Купить билет на групповую поездку: ${getTripTypeLabel(trip.value.type)}`
+      : 'Групповая поездка'
 })
 </script>
 
@@ -611,6 +587,13 @@ useSeoMeta({
           </div>
 
           <hr class="my-6 border-2 border-gray-300 dark:border-gray-600" />
+
+          <!-- Customer Info Section -->
+          <div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              📝 Контактные данные
+            </h3>
+          </div>
 
           <!-- Customer Info -->
           <div>

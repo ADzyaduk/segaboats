@@ -188,7 +188,14 @@ export async function sendTelegramMessageWithId(message: TelegramMessage): Promi
         ok: result.ok,
         error_code: result.error_code,
         description: result.description,
-        parameters: result.parameters
+        parameters: result.parameters,
+        full_response: JSON.stringify(result, null, 2)
+      })
+      console.error('[telegram] ❌ Message that failed:', {
+        chat_id: message.chat_id,
+        text_length: message.text?.length,
+        has_buttons: !!message.reply_markup,
+        parse_mode: message.parse_mode
       })
       return { success: false }
     }

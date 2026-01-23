@@ -562,6 +562,13 @@ useSeoMeta({
 
           <hr class="my-6 border-2 border-gray-300 dark:border-gray-600" />
 
+          <!-- Customer Info Section -->
+          <div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              📝 Контактные данные
+            </h3>
+          </div>
+
           <!-- Customer Info -->
           <div>
             <label for="service-customer-name" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
