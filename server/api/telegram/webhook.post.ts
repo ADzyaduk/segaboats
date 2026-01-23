@@ -4,7 +4,8 @@ import {
   sendTelegramMessage, 
   editTelegramMessage, 
   answerCallbackQuery,
-  formatBookingMessage
+  formatBookingMessage,
+  formatTicketMessage
 } from '~~/server/utils/telegram'
 import {
   notifyCustomerBookingConfirmed,
@@ -793,7 +794,7 @@ export default defineEventHandler(async (event) => {
 
           // Update ticket status
           const updatedTicket = await prisma.groupTripTicket.update({
-            where: { id: cancelTicketId },
+            where: { id: ticketId },
             data: { 
               status: 'CONFIRMED',
               confirmedAt: new Date()
@@ -813,7 +814,6 @@ export default defineEventHandler(async (event) => {
 
           // Update admin message
           if (callback_query.message) {
-            const { formatTicketMessage } = await import('~~/server/utils/telegram')
             const formattedMessage = formatTicketMessage({
               type: 'update',
               ticketId: updatedTicket.id,
@@ -965,7 +965,6 @@ export default defineEventHandler(async (event) => {
 
           // Update admin message
           if (callback_query.message) {
-            const { formatTicketMessage } = await import('~~/server/utils/telegram')
             const formattedMessage = formatTicketMessage({
               type: 'update',
               ticketId: updatedTicket.id,
