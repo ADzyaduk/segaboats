@@ -9,6 +9,7 @@ interface TicketBody {
   customerEmail?: string
   desiredDate?: string // ISO date string
   telegramUserId?: string
+  quantity?: number // Number of tickets to purchase (default: 1)
 }
 
 export default defineEventHandler(async (event) => {
@@ -78,6 +79,14 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Validate price
+    if (!service.price || service.price <= 0) {
+      throw createError({
+        statusCode: 500,
+        message: 'Цена услуги не настроена. Обратитесь к администратору.'
+      })
+    }
+
     // Validate desired date if provided
     let desiredDateObj: Date | null = null
     if (body.desiredDate) {
@@ -125,6 +134,15 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Validate price before creating ticket
+    const ticketPrice = Number(service.price)
+    if (!ticketPrice || ticketPrice <= 0 || isNaN(ticketPrice)) {
+      throw createError({
+        statusCode: 500,
+        message: 'Некорректная цена услуги. Обратитесь к администратору.'
+      })
+    }
+
     // Create ticket (without tripId - will be set later by manager)
     const ticket = await prisma.groupTripTicket.create({
       data: {
@@ -134,7 +152,7 @@ export default defineEventHandler(async (event) => {
         customerPhone: body.customerPhone.trim(),
         customerEmail: body.customerEmail?.trim() || null,
         desiredDate: desiredDateObj,
-        totalPrice: service.price,
+        totalPrice: ticketPrice,
         status: 'PENDING',
         tripId: null // Will be set when manager creates the trip
       },

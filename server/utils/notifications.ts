@@ -13,13 +13,28 @@ import {
 
 // Get admin chat ID from config
 function getAdminChatId(): string | null {
-  const config = useRuntimeConfig()
-  const adminChatId = config.telegramAdminChatId
-  if (!adminChatId) {
-    console.warn('[notifications] TELEGRAM_ADMIN_CHAT_ID not configured')
+  try {
+    const config = useRuntimeConfig()
+    const adminChatId = config.telegramAdminChatId
+    
+    if (!adminChatId) {
+      console.error('[notifications] ❌ TELEGRAM_ADMIN_CHAT_ID not configured in runtime config')
+      console.error('[notifications] Check .env file and ensure TELEGRAM_ADMIN_CHAT_ID is set')
+      return null
+    }
+    
+    const chatIdStr = String(adminChatId).trim()
+    if (!chatIdStr || chatIdStr === 'undefined' || chatIdStr === 'null') {
+      console.error('[notifications] ❌ TELEGRAM_ADMIN_CHAT_ID is invalid:', adminChatId)
+      return null
+    }
+    
+    console.log('[notifications] ✓ Admin chat ID configured:', chatIdStr)
+    return chatIdStr
+  } catch (error) {
+    console.error('[notifications] ❌ Error getting admin chat ID:', error)
     return null
   }
-  return String(adminChatId)
 }
 
 // Check if user has real Telegram ID (not temp)
@@ -41,13 +56,16 @@ export async function notifyAdminNewBooking(booking: {
   customerEmail?: string | null
   customerNotes?: string | null
 }): Promise<{ success: boolean; messageId?: number }> {
+  console.log('[notifications] 📤 Attempting to notify admin about new booking:', booking.id)
+  
   try {
     const adminChatId = getAdminChatId()
     if (!adminChatId) {
-      console.warn('[notifications] Cannot notify admin: TELEGRAM_ADMIN_CHAT_ID not set')
+      console.error('[notifications] ❌ Cannot notify admin: TELEGRAM_ADMIN_CHAT_ID not configured')
       return { success: false }
     }
 
+    console.log('[notifications] ✓ Admin chat ID found, formatting message...')
     const formattedMessage = formatBookingMessage({
       type: 'new',
       bookingId: booking.id,
@@ -74,10 +92,23 @@ export async function notifyAdminNewBooking(booking: {
       ]
     }
 
+    console.log('[notifications] 📨 Sending notification to admin chat:', adminChatId)
     const result = await sendAdminNotification(adminChatId, formattedMessage, buttons)
+    
+    if (result.success) {
+      console.log('[notifications] ✅ Successfully notified admin about booking:', booking.id, 'Message ID:', result.messageId)
+    } else {
+      console.error('[notifications] ❌ Failed to notify admin about booking:', booking.id)
+    }
+    
     return result
-  } catch (error) {
-    console.error('[notifications] Error notifying admin about new booking:', error)
+  } catch (error: any) {
+    console.error('[notifications] ❌ Error notifying admin about new booking:', booking.id)
+    console.error('[notifications] Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name
+    })
     return { success: false }
   }
 }
@@ -92,13 +123,16 @@ export async function notifyAdminNewTicket(ticket: {
   totalPrice: number
   serviceType: string
 }): Promise<{ success: boolean; messageId?: number }> {
+  console.log('[notifications] 📤 Attempting to notify admin about new ticket:', ticket.id)
+  
   try {
     const adminChatId = getAdminChatId()
     if (!adminChatId) {
-      console.warn('[notifications] Cannot notify admin: TELEGRAM_ADMIN_CHAT_ID not set')
+      console.error('[notifications] ❌ Cannot notify admin: TELEGRAM_ADMIN_CHAT_ID not configured')
       return { success: false }
     }
 
+    console.log('[notifications] ✓ Admin chat ID found, formatting message...')
     const formattedMessage = formatTicketMessage({
       type: 'new',
       ticketId: ticket.id,
@@ -122,10 +156,23 @@ export async function notifyAdminNewTicket(ticket: {
       ]
     }
 
+    console.log('[notifications] 📨 Sending notification to admin chat:', adminChatId)
     const result = await sendAdminNotification(adminChatId, formattedMessage, buttons)
+    
+    if (result.success) {
+      console.log('[notifications] ✅ Successfully notified admin about ticket:', ticket.id, 'Message ID:', result.messageId)
+    } else {
+      console.error('[notifications] ❌ Failed to notify admin about ticket:', ticket.id)
+    }
+    
     return result
-  } catch (error) {
-    console.error('[notifications] Error notifying admin about new ticket:', error)
+  } catch (error: any) {
+    console.error('[notifications] ❌ Error notifying admin about new ticket:', ticket.id)
+    console.error('[notifications] Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name
+    })
     return { success: false }
   }
 }

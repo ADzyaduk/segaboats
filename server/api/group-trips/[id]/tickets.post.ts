@@ -56,6 +56,14 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Validate price
+    if (!trip.price || trip.price <= 0) {
+      throw createError({
+        statusCode: 500,
+        message: 'Цена поездки не настроена. Обратитесь к администратору.'
+      })
+    }
+
     // Find or create user
     let user = null
     if (body.telegramUserId) {
@@ -90,6 +98,15 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Validate price before creating ticket
+    const ticketPrice = Number(trip.price)
+    if (!ticketPrice || ticketPrice <= 0 || isNaN(ticketPrice)) {
+      throw createError({
+        statusCode: 500,
+        message: 'Некорректная цена поездки. Обратитесь к администратору.'
+      })
+    }
+
     // Create ticket and update available seats atomically
     const ticket = await prisma.$transaction(async (tx) => {
       // Create ticket
@@ -101,7 +118,7 @@ export default defineEventHandler(async (event) => {
           customerName: body.customerName,
           customerPhone: body.customerPhone,
           customerEmail: body.customerEmail || null,
-          totalPrice: trip.price,
+          totalPrice: ticketPrice,
           status: 'PENDING'
         },
         include: {

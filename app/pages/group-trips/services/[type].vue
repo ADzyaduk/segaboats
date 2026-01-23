@@ -16,6 +16,7 @@ const isSubmitting = ref(false)
 const customerName = ref('')
 const customerPhone = ref('')
 const customerEmail = ref('')
+const quantity = ref(1)
 const phoneError = ref<string | null>(null)
 
 const onPhoneInput = (event: Event) => {
@@ -59,6 +60,11 @@ const handlePurchase = async () => {
     return
   }
 
+  if (quantity.value < 1 || quantity.value > 10) {
+    toast.error('Ошибка', 'Количество билетов должно быть от 1 до 10')
+    return
+  }
+
   const phoneValidation = validatePhone(customerPhone.value)
   if (!phoneValidation.isValid) {
     phoneError.value = phoneValidation.error || 'Некорректный формат телефона'
@@ -69,7 +75,7 @@ const handlePurchase = async () => {
   isSubmitting.value = true
 
   try {
-    // Create ticket for service type (without specific trip)
+    // Create tickets for service type (without specific trip)
     const response = await $fetch<{
       success: boolean
       data: any
@@ -80,23 +86,35 @@ const handlePurchase = async () => {
         customerName: customerName.value.trim(),
         customerPhone: phoneValidation.formatted,
         customerEmail: customerEmail.value.trim() || undefined,
-        telegramUserId: telegramUser.value?.id?.toString()
+        telegramUserId: telegramUser.value?.id?.toString(),
+        quantity: quantity.value
       }
     })
 
     if (response.success && response.data) {
-      toast.success('Билет заказан!', 'Мы свяжемся с вами в ближайшее время для согласования даты и времени поездки')
+      const ticketCount = Array.isArray(response.data) ? response.data.length : 1
+      toast.success(
+        'Билеты заказаны!', 
+        `Заказано билетов: ${ticketCount}. Мы свяжемся с вами в ближайшее время для согласования даты и времени поездки`
+      )
       showBookingSlideover.value = false
-      await navigateTo(`/my-tickets/${response.data.id}`)
+      const firstTicket = Array.isArray(response.data) ? response.data[0] : response.data
+      await navigateTo(`/my-tickets/${firstTicket.id}`)
     } else {
-      throw new Error(response.error || 'Не удалось заказать билет')
+      throw new Error(response.error || 'Не удалось заказать билеты')
     }
   } catch (error: any) {
-    toast.error('Ошибка', error?.data?.message || 'Не удалось заказать билет')
+    toast.error('Ошибка', error?.data?.message || 'Не удалось заказать билеты')
   } finally {
     isSubmitting.value = false
   }
 }
+
+// Calculate total price
+const totalPrice = computed(() => {
+  if (!service.value) return 0
+  return service.value.price * quantity.value
+})
 
 // SEO
 useSeoMeta({
@@ -259,11 +277,54 @@ useSeoMeta({
               <p class="text-sm text-gray-500 mb-2">
                 {{ formatDuration(service.duration) }}
               </p>
-              <p class="text-primary-600 font-semibold text-lg">
-                {{ formatPrice(service.price) }}
-              </p>
+              <div class="space-y-1">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  {{ formatPrice(service.price) }} × {{ quantity }}
+                </p>
+                <p class="text-primary-600 font-semibold text-xl">
+                  Итого: {{ formatPrice(totalPrice) }}
+                </p>
+              </div>
             </div>
           </UCard>
+
+          <!-- Quantity -->
+          <div>
+            <label for="service-quantity" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+              Количество билетов <span class="text-error-500">*</span>
+            </label>
+            <div class="flex items-center gap-3">
+              <UButton
+                variant="outline"
+                color="neutral"
+                size="sm"
+                :disabled="quantity <= 1"
+                @click="quantity = Math.max(1, quantity - 1)"
+              >
+                <UIcon name="i-heroicons-minus" />
+              </UButton>
+              <UInput
+                id="service-quantity"
+                v-model.number="quantity"
+                type="number"
+                min="1"
+                max="10"
+                class="w-20 text-center"
+              />
+              <UButton
+                variant="outline"
+                color="neutral"
+                size="sm"
+                :disabled="quantity >= 10"
+                @click="quantity = Math.min(10, quantity + 1)"
+              >
+                <UIcon name="i-heroicons-plus" />
+              </UButton>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">
+              Можно заказать от 1 до 10 билетов
+            </p>
+          </div>
 
           <!-- Customer Info -->
           <div>
@@ -342,10 +403,10 @@ useSeoMeta({
           <UButton
             color="primary"
             :loading="isSubmitting"
-            :disabled="!customerName || !customerPhone"
+            :disabled="!customerName || !customerPhone || quantity < 1 || quantity > 10"
             @click="handlePurchase"
           >
-            Заказать билет
+            Заказать {{ quantity }} {{ quantity === 1 ? 'билет' : quantity < 5 ? 'билета' : 'билетов' }}
           </UButton>
         </div>
       </template>

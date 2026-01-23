@@ -26,12 +26,26 @@ export interface TelegramMessage {
 
 // Get Telegram bot token from runtime config
 function getBotToken(): string {
-  const config = useRuntimeConfig()
-  const token = config.telegramBotToken
-  if (!token) {
-    throw new Error('TELEGRAM_BOT_TOKEN is not configured')
+  try {
+    const config = useRuntimeConfig()
+    const token = config.telegramBotToken
+    
+    if (!token) {
+      console.error('[telegram] ❌ TELEGRAM_BOT_TOKEN is not configured in runtime config')
+      throw new Error('TELEGRAM_BOT_TOKEN is not configured')
+    }
+    
+    const tokenStr = String(token).trim()
+    if (!tokenStr || tokenStr === 'undefined' || tokenStr === 'null') {
+      console.error('[telegram] ❌ TELEGRAM_BOT_TOKEN is invalid:', token)
+      throw new Error('TELEGRAM_BOT_TOKEN is invalid')
+    }
+    
+    return tokenStr
+  } catch (error: any) {
+    console.error('[telegram] ❌ Error getting bot token:', error?.message)
+    throw error
   }
-  return token
 }
 
 // Validate Telegram WebApp init data
@@ -134,7 +148,16 @@ export async function sendTelegramMessage(message: TelegramMessage): Promise<boo
 export async function sendTelegramMessageWithId(message: TelegramMessage): Promise<{ success: boolean; messageId?: number }> {
   try {
     const botToken = getBotToken()
+    
+    if (!botToken || botToken === 'undefined' || botToken === 'null') {
+      console.error('[telegram] ❌ Bot token is invalid or not configured')
+      return { success: false }
+    }
+    
     const url = `https://api.telegram.org/bot${botToken}/sendMessage`
+    
+    console.log('[telegram] 📤 Sending message to chat:', message.chat_id)
+    console.log('[telegram] Message preview:', message.text.substring(0, 100) + '...')
 
     const response = await fetch(url, {
       method: 'POST',
@@ -147,13 +170,23 @@ export async function sendTelegramMessageWithId(message: TelegramMessage): Promi
     const result = await response.json()
     
     if (!result.ok) {
-      console.error('Telegram API error:', result)
+      console.error('[telegram] ❌ Telegram API error:', {
+        ok: result.ok,
+        error_code: result.error_code,
+        description: result.description,
+        parameters: result.parameters
+      })
       return { success: false }
     }
 
+    console.log('[telegram] ✅ Message sent successfully, ID:', result.result.message_id)
     return { success: true, messageId: result.result.message_id }
-  } catch (error) {
-    console.error('Error sending Telegram message:', error)
+  } catch (error: any) {
+    console.error('[telegram] ❌ Error sending Telegram message:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name
+    })
     return { success: false }
   }
 }
