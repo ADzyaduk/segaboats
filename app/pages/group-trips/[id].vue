@@ -19,6 +19,8 @@ const customerEmail = ref('')
 const adultTickets = ref(1)
 const childTickets = ref(0)
 const phoneError = ref<string | null>(null)
+const showTelegramModal = ref(false)
+const lastTicketId = ref<string | null>(null)
 
 const onPhoneInput = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -32,6 +34,16 @@ onMounted(() => {
     customerName.value = [telegramUser.value.first_name, telegramUser.value.last_name]
       .filter(Boolean)
       .join(' ')
+  }
+  
+  // Show Telegram modal for web users
+  if (!isTelegram.value) {
+    const modalSeen = localStorage.getItem('telegram_modal_seen_trip')
+    if (!modalSeen) {
+      setTimeout(() => {
+        showTelegramModal.value = true
+      }, 2000)
+    }
   }
 })
 
@@ -108,6 +120,15 @@ const handlePurchase = async () => {
         `Заказано ${ticketCount} ${ticketText}. Мы свяжемся с вами для подтверждения`
       )
       showBookingSlideover.value = false
+      
+      // Save ticket ID for modal
+      lastTicketId.value = ticket.id
+      
+      // Show Telegram modal for web users
+      if (!isTelegram.value) {
+        showTelegramModal.value = true
+      }
+      
       await navigateTo(`/my-tickets/${ticket.id}`)
     }
   } catch (error: any) {
@@ -484,6 +505,16 @@ useSeoMeta({
             </div>
           </UCard>
 
+          <!-- Ticket Selection Header -->
+          <div class="pb-2 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              Выберите количество билетов
+            </h3>
+            <p class="text-sm text-gray-500 mt-1">
+              Детские билеты (до 12 лет) - скидка 50%
+            </p>
+          </div>
+
           <!-- Adult Tickets -->
           <div>
             <label for="trip-adult-tickets" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
@@ -670,5 +701,11 @@ useSeoMeta({
         </div>
       </template>
     </USlideover>
+
+    <!-- Telegram Subscribe Modal -->
+    <TelegramSubscribeModal
+      v-model:open="showTelegramModal"
+      :ticket-id="lastTicketId || undefined"
+    />
   </div>
 </template>

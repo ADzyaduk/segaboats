@@ -15,11 +15,21 @@ import {
 export function getAdminChatId(): string | null {
   try {
     const config = useRuntimeConfig()
-    const adminChatId = config.telegramAdminChatId
+    console.log('[notifications] 🔍 Checking runtime config for admin chat ID...')
+    console.log('[notifications] Config keys:', Object.keys(config))
+    
+    // Try different possible property names and sources
+    const adminChatId = config.telegramAdminChatId || 
+                       config.TELEGRAM_ADMIN_CHAT_ID || 
+                       process.env.TELEGRAM_ADMIN_CHAT_ID || 
+                       process.env.NUXT_TELEGRAM_ADMIN_CHAT_ID
+    
+    console.log('[notifications] Admin chat ID value:', adminChatId, 'Type:', typeof adminChatId)
     
     if (!adminChatId) {
       console.error('[notifications] ❌ TELEGRAM_ADMIN_CHAT_ID not configured in runtime config')
       console.error('[notifications] Check .env file and ensure TELEGRAM_ADMIN_CHAT_ID is set')
+      console.error('[notifications] Also check nuxt.config.ts runtimeConfig section')
       return null
     }
     

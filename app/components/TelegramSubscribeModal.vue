@@ -47,7 +47,7 @@ const handleSubscribe = () => {
 </script>
 
 <template>
-  <UModal v-model:open="isOpen" @close="closeModal">
+  <UModal v-model="isOpen">
     <UCard>
       <template #header>
         <div class="flex items-center justify-between">
