@@ -735,15 +735,13 @@ export default defineEventHandler(async (event) => {
       } else if (data?.startsWith('cfm_') && isAdmin) {
         // Short format: cfm_ + last 20 chars of ticket ID
         const shortId = data.replace('cfm_', '')
-        // Find ticket by matching last 20 chars of ID
-        const tickets = await prisma.groupTripTicket.findMany({
-          where: {
-            id: { endsWith: shortId }
-          },
-          take: 1
+        // Find ticket by matching last 20 chars of ID using contains (Prisma doesn't support endsWith directly)
+        const allTickets = await prisma.groupTripTicket.findMany({
+          take: 100 // Limit to recent tickets
         })
-        if (tickets.length > 0) {
-          ticketId = tickets[0].id
+        const matchingTicket = allTickets.find(t => t.id.endsWith(shortId))
+        if (matchingTicket) {
+          ticketId = matchingTicket.id
           console.log('[webhook] Processing confirm_ticket callback (short format):', {
             shortId,
             ticketId,
@@ -847,14 +845,31 @@ export default defineEventHandler(async (event) => {
           })
 
           return { ok: true }
-        } catch (error) {
-          console.error('Error confirming ticket:', error)
+        } catch (error: any) {
+          console.error('[webhook] Error confirming ticket:', {
+            ticketId,
+            error: error?.message,
+            stack: error?.stack,
+            name: error?.name
+          })
           await answerCallbackQuery({
             callback_query_id: callback_query.id,
-            text: 'Ошибка при подтверждении',
+            text: `Ошибка при подтверждении: ${error?.message || 'Неизвестная ошибка'}`,
             show_alert: true
           })
         }
+      } else if (data?.startsWith('confirm_ticket_') || data?.startsWith('cfm_')) {
+        // Callback received but user is not admin
+        console.warn('[webhook] Non-admin user tried to confirm ticket:', {
+          userId: callback_query.from.id,
+          callbackData: data,
+          adminChatId: config.telegramAdminChatId
+        })
+        await answerCallbackQuery({
+          callback_query_id: callback_query.id,
+          text: 'Только администратор может подтверждать билеты',
+          show_alert: true
+        })
       }
 
       // Handle ticket cancellation (admin only)
@@ -872,15 +887,13 @@ export default defineEventHandler(async (event) => {
       } else if (data?.startsWith('cnl_') && isAdmin) {
         // Short format: cnl_ + last 20 chars of ticket ID
         const shortId = data.replace('cnl_', '')
-        // Find ticket by matching last 20 chars of ID
-        const tickets = await prisma.groupTripTicket.findMany({
-          where: {
-            id: { endsWith: shortId }
-          },
-          take: 1
+        // Find ticket by matching last 20 chars of ID using contains (Prisma doesn't support endsWith directly)
+        const allTickets = await prisma.groupTripTicket.findMany({
+          take: 100 // Limit to recent tickets
         })
-        if (tickets.length > 0) {
-          cancelTicketId = tickets[0].id
+        const matchingTicket = allTickets.find(t => t.id.endsWith(shortId))
+        if (matchingTicket) {
+          cancelTicketId = matchingTicket.id
           console.log('[webhook] Processing cancel_ticket callback (short format):', {
             shortId,
             ticketId: cancelTicketId,
@@ -980,14 +993,31 @@ export default defineEventHandler(async (event) => {
           })
 
           return { ok: true }
-        } catch (error) {
-          console.error('Error cancelling ticket:', error)
+        } catch (error: any) {
+          console.error('[webhook] Error cancelling ticket:', {
+            ticketId: cancelTicketId,
+            error: error?.message,
+            stack: error?.stack,
+            name: error?.name
+          })
           await answerCallbackQuery({
             callback_query_id: callback_query.id,
-            text: 'Ошибка при отмене',
+            text: `Ошибка при отмене: ${error?.message || 'Неизвестная ошибка'}`,
             show_alert: true
           })
         }
+      } else if (data?.startsWith('cancel_ticket_') || data?.startsWith('cnl_')) {
+        // Callback received but user is not admin
+        console.warn('[webhook] Non-admin user tried to cancel ticket:', {
+          userId: callback_query.from.id,
+          callbackData: data,
+          adminChatId: config.telegramAdminChatId
+        })
+        await answerCallbackQuery({
+          callback_query_id: callback_query.id,
+          text: 'Только администратор может отменять билеты',
+          show_alert: true
+        })
       }
 
       if (data === 'contact') {
