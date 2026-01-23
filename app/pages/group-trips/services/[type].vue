@@ -16,7 +16,8 @@ const isSubmitting = ref(false)
 const customerName = ref('')
 const customerPhone = ref('')
 const customerEmail = ref('')
-const quantity = ref(1)
+const adultTickets = ref(1)
+const childTickets = ref(0)
 const phoneError = ref<string | null>(null)
 
 const onPhoneInput = (event: Event) => {
@@ -60,8 +61,13 @@ const handlePurchase = async () => {
     return
   }
 
-  if (quantity.value < 1 || quantity.value > 10) {
-    toast.error('Ошибка', 'Количество билетов должно быть от 1 до 10')
+  const totalTickets = adultTickets.value + childTickets.value
+  if (totalTickets < 1) {
+    toast.error('Ошибка', 'Выберите хотя бы один билет')
+    return
+  }
+  if (totalTickets > 10) {
+    toast.error('Ошибка', 'Можно заказать не более 10 билетов')
     return
   }
 
@@ -87,19 +93,20 @@ const handlePurchase = async () => {
         customerPhone: phoneValidation.formatted,
         customerEmail: customerEmail.value.trim() || undefined,
         telegramUserId: telegramUser.value?.id?.toString(),
-        quantity: quantity.value
+        adultTickets: adultTickets.value,
+        childTickets: childTickets.value
       }
     })
 
     if (response.success && response.data) {
-      const ticketCount = Array.isArray(response.data) ? response.data.length : 1
+      const ticketCount = adultTickets.value + childTickets.value
+      const ticketText = ticketCount === 1 ? 'билет' : ticketCount < 5 ? 'билета' : 'билетов'
       toast.success(
         'Билеты заказаны!', 
-        `Заказано билетов: ${ticketCount}. Мы свяжемся с вами в ближайшее время для согласования даты и времени поездки`
+        `Заказано ${ticketCount} ${ticketText}. Мы свяжемся с вами в ближайшее время для согласования даты и времени поездки`
       )
       showBookingSlideover.value = false
-      const firstTicket = Array.isArray(response.data) ? response.data[0] : response.data
-      await navigateTo(`/my-tickets/${firstTicket.id}`)
+      await navigateTo(`/my-tickets/${response.data.id}`)
     } else {
       throw new Error(response.error || 'Не удалось заказать билеты')
     }
@@ -110,10 +117,30 @@ const handlePurchase = async () => {
   }
 }
 
+// Calculate prices
+const adultPrice = computed(() => {
+  return service.value?.price || 0
+})
+
+const childPrice = computed(() => {
+  return Math.floor(adultPrice.value * 0.5) // 50% от взрослого
+})
+
+const adultTotal = computed(() => {
+  return adultPrice.value * adultTickets.value
+})
+
+const childTotal = computed(() => {
+  return childPrice.value * childTickets.value
+})
+
 // Calculate total price
 const totalPrice = computed(() => {
-  if (!service.value) return 0
-  return service.value.price * quantity.value
+  return adultTotal.value + childTotal.value
+})
+
+const totalTickets = computed(() => {
+  return adultTickets.value + childTickets.value
 })
 
 // SEO
@@ -277,37 +304,29 @@ useSeoMeta({
               <p class="text-sm text-gray-500 mb-2">
                 {{ formatDuration(service.duration) }}
               </p>
-              <div class="space-y-1">
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                  {{ formatPrice(service.price) }} × {{ quantity }}
-                </p>
-                <p class="text-primary-600 font-semibold text-xl">
-                  Итого: {{ formatPrice(totalPrice) }}
-                </p>
-              </div>
             </div>
           </UCard>
 
-          <!-- Quantity -->
+          <!-- Adult Tickets -->
           <div>
-            <label for="service-quantity" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Количество билетов <span class="text-error-500">*</span>
+            <label for="service-adult-tickets" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+              Взрослых билетов <span class="text-error-500">*</span>
             </label>
             <div class="flex items-center gap-3">
               <UButton
                 variant="outline"
                 color="neutral"
                 size="sm"
-                :disabled="quantity <= 1"
-                @click="quantity = Math.max(1, quantity - 1)"
+                :disabled="adultTickets <= 0"
+                @click="adultTickets = Math.max(0, adultTickets - 1)"
               >
                 <UIcon name="i-heroicons-minus" />
               </UButton>
               <UInput
-                id="service-quantity"
-                v-model.number="quantity"
+                id="service-adult-tickets"
+                v-model.number="adultTickets"
                 type="number"
-                min="1"
+                min="0"
                 max="10"
                 class="w-20 text-center"
               />
@@ -315,14 +334,77 @@ useSeoMeta({
                 variant="outline"
                 color="neutral"
                 size="sm"
-                :disabled="quantity >= 10"
-                @click="quantity = Math.min(10, quantity + 1)"
+                :disabled="totalTickets >= 10"
+                @click="adultTickets = Math.min(10 - childTickets, adultTickets + 1)"
               >
                 <UIcon name="i-heroicons-plus" />
               </UButton>
+              <div class="flex-1 text-right">
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                  × {{ formatPrice(adultPrice) }} = {{ formatPrice(adultTotal) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Child Tickets -->
+          <div>
+            <label for="service-child-tickets" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+              Детских билетов (до 12 лет) <span class="text-xs text-gray-500">-50%</span>
+            </label>
+            <div class="flex items-center gap-3">
+              <UButton
+                variant="outline"
+                color="neutral"
+                size="sm"
+                :disabled="childTickets <= 0"
+                @click="childTickets = Math.max(0, childTickets - 1)"
+              >
+                <UIcon name="i-heroicons-minus" />
+              </UButton>
+              <UInput
+                id="service-child-tickets"
+                v-model.number="childTickets"
+                type="number"
+                min="0"
+                max="10"
+                class="w-20 text-center"
+              />
+              <UButton
+                variant="outline"
+                color="neutral"
+                size="sm"
+                :disabled="totalTickets >= 10"
+                @click="childTickets = Math.min(10 - adultTickets, childTickets + 1)"
+              >
+                <UIcon name="i-heroicons-plus" />
+              </UButton>
+              <div class="flex-1 text-right">
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                  × {{ formatPrice(childPrice) }} = {{ formatPrice(childTotal) }}
+                </span>
+              </div>
             </div>
             <p class="text-xs text-gray-500 mt-1">
-              Можно заказать от 1 до 10 билетов
+              Детский билет стоит 50% от взрослого
+            </p>
+          </div>
+
+          <!-- Total -->
+          <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center">
+              <span class="font-medium text-gray-900 dark:text-white">
+                Итого ({{ totalTickets }} {{ totalTickets === 1 ? 'билет' : totalTickets < 5 ? 'билета' : 'билетов' }}):
+              </span>
+              <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                {{ formatPrice(totalPrice) }}
+              </span>
+            </div>
+            <p v-if="totalTickets === 0" class="text-xs text-error-500 mt-1">
+              Выберите хотя бы один билет
+            </p>
+            <p v-else-if="totalTickets > 10" class="text-xs text-error-500 mt-1">
+              Можно заказать не более 10 билетов
             </p>
           </div>
 
@@ -403,10 +485,10 @@ useSeoMeta({
           <UButton
             color="primary"
             :loading="isSubmitting"
-            :disabled="!customerName || !customerPhone || quantity < 1 || quantity > 10"
+            :disabled="!customerName || !customerPhone || totalTickets < 1 || totalTickets > 10"
             @click="handlePurchase"
           >
-            Заказать {{ quantity }} {{ quantity === 1 ? 'билет' : quantity < 5 ? 'билета' : 'билетов' }}
+            Заказать {{ totalTickets }} {{ totalTickets === 1 ? 'билет' : totalTickets < 5 ? 'билета' : 'билетов' }}
           </UButton>
         </div>
       </template>

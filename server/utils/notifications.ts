@@ -11,8 +11,8 @@ import {
   formatTicketMessage
 } from './telegram'
 
-// Get admin chat ID from config
-function getAdminChatId(): string | null {
+// Get admin chat ID from config (exported for testing)
+export function getAdminChatId(): string | null {
   try {
     const config = useRuntimeConfig()
     const adminChatId = config.telegramAdminChatId
@@ -122,6 +122,8 @@ export async function notifyAdminNewTicket(ticket: {
   desiredDate?: Date | null
   totalPrice: number
   serviceType: string
+  adultTickets?: number
+  childTickets?: number
 }): Promise<{ success: boolean; messageId?: number }> {
   console.log('[notifications] 📤 Attempting to notify admin about new ticket:', ticket.id)
   
@@ -141,7 +143,9 @@ export async function notifyAdminNewTicket(ticket: {
       customerPhone: ticket.customerPhone,
       desiredDate: ticket.desiredDate,
       totalPrice: ticket.totalPrice,
-      serviceType: ticket.serviceType
+      serviceType: ticket.serviceType,
+      adultTickets: ticket.adultTickets ?? 1,
+      childTickets: ticket.childTickets ?? 0
     })
 
     const buttons = {

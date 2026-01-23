@@ -14,6 +14,24 @@ const telegramNotifyLink = computed(() => {
   return `https://t.me/${telegramBotUsername}?start=ticket_${ticketId}`
 })
 
+// Modal state
+const showTelegramModal = ref(false)
+
+// Show modal for web users who haven't connected Telegram
+onMounted(() => {
+  if (!isTelegram.value && ticket.value) {
+    // Check if user has seen the modal for this ticket
+    const modalSeen = localStorage.getItem(`telegram_modal_seen_ticket_${ticketId}`)
+    
+    if (!modalSeen) {
+      // Show modal after 2 seconds
+      setTimeout(() => {
+        showTelegramModal.value = true
+      }, 2000)
+    }
+  }
+})
+
 const statusColors: Record<string, string> = {
   PENDING: 'warning',
   CONFIRMED: 'success',
@@ -197,5 +215,11 @@ useSeoMeta({
         </div>
       </div>
     </UContainer>
+
+    <!-- Telegram Subscribe Modal -->
+    <TelegramSubscribeModal
+      v-model:open="showTelegramModal"
+      :ticket-id="ticketId"
+    />
   </div>
 </template>

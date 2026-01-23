@@ -103,6 +103,8 @@ export function useGroupTrips() {
       customerPhone: string
       customerEmail?: string
       telegramUserId?: string
+      adultTickets?: number
+      childTickets?: number
     }
   ) => {
     isLoading.value = true

@@ -286,6 +286,8 @@ export function formatTicketMessage(data: {
   totalPrice: number
   serviceType: string
   status?: string
+  adultTickets?: number
+  childTickets?: number
 }): string {
   let message = ''
   
@@ -308,7 +310,23 @@ export function formatTicketMessage(data: {
     message += `📅 <b>Желаемая дата:</b> ${dateStr}\n`
   }
   
-  message += `💰 <b>Сумма:</b> ${data.totalPrice.toLocaleString('ru-RU')} ₽\n`
+  const adultTickets = data.adultTickets ?? 1
+  const childTickets = data.childTickets ?? 0
+  const totalTickets = adultTickets + childTickets
+  
+  if (totalTickets > 1 || childTickets > 0) {
+    message += `🎫 <b>Билетов:</b> ${totalTickets} (взрослых: ${adultTickets}, детских: ${childTickets})\n`
+    if (adultTickets > 0 && childTickets > 0) {
+      // Calculate prices from total (approximate)
+      const estimatedAdultPrice = Math.floor(data.totalPrice / (adultTickets + childTickets * 0.5))
+      const estimatedChildPrice = Math.floor(estimatedAdultPrice * 0.5)
+      message += `💰 <b>Взрослых:</b> ${adultTickets} × ${estimatedAdultPrice.toLocaleString('ru-RU')} ₽ = ${(estimatedAdultPrice * adultTickets).toLocaleString('ru-RU')} ₽\n`
+      message += `💰 <b>Детских:</b> ${childTickets} × ${estimatedChildPrice.toLocaleString('ru-RU')} ₽ = ${(estimatedChildPrice * childTickets).toLocaleString('ru-RU')} ₽\n`
+    }
+    message += `💰 <b>Общая сумма:</b> ${data.totalPrice.toLocaleString('ru-RU')} ₽\n`
+  } else {
+    message += `💰 <b>Сумма:</b> ${data.totalPrice.toLocaleString('ru-RU')} ₽\n`
+  }
   
   if (data.status) {
     const statusEmoji = {

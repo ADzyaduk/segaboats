@@ -9,7 +9,8 @@ interface TicketBody {
   customerEmail?: string
   desiredDate?: string // ISO date string
   telegramUserId?: string
-  quantity?: number // Number of tickets to purchase (default: 1)
+  adultTickets?: number // Number of adult tickets (default: 1)
+  childTickets?: number // Number of child tickets (default: 0)
 }
 
 export default defineEventHandler(async (event) => {
@@ -143,7 +144,60 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Create ticket (without tripId - will be set later by manager)
+    console.log('[tickets] Creating ticket with price:', {
+      serviceType,
+      servicePrice: service.price,
+      ticketPrice,
+      serviceTitle: service.title
+    })
+
+    // Get adult and child tickets (default to 1 adult for backward compatibility)
+    const adultTickets = body.adultTickets ?? 1
+    const childTickets = body.childTickets ?? 0
+    
+    if (adultTickets < 0 || childTickets < 0) {
+      throw createError({
+        statusCode: 400,
+        message: 'Количество билетов не может быть отрицательным'
+      })
+    }
+    
+    const totalTickets = adultTickets + childTickets
+    if (totalTickets < 1) {
+      throw createError({
+        statusCode: 400,
+        message: 'Выберите хотя бы один билет'
+      })
+    }
+    
+    if (totalTickets > 10) {
+      throw createError({
+        statusCode: 400,
+        message: 'Можно заказать не более 10 билетов'
+      })
+    }
+
+    // Calculate prices
+    const adultPrice = ticketPrice
+    const childPrice = Math.floor(adultPrice * 0.5) // 50% от взрослого
+    
+    // Calculate total price for all tickets
+    const adultTotal = adultPrice * adultTickets
+    const childTotal = childPrice * childTickets
+    const totalPriceForAllTickets = adultTotal + childTotal
+
+    console.log('[tickets] Ticket calculation:', {
+      adultTickets,
+      childTickets,
+      totalTickets,
+      adultPrice,
+      childPrice,
+      adultTotal,
+      childTotal,
+      totalPrice: totalPriceForAllTickets
+    })
+
+    // Create ticket with adult/child information
     const ticket = await prisma.groupTripTicket.create({
       data: {
         serviceType: serviceType as 'SHORT' | 'MEDIUM' | 'FISHING',
@@ -152,7 +206,11 @@ export default defineEventHandler(async (event) => {
         customerPhone: body.customerPhone.trim(),
         customerEmail: body.customerEmail?.trim() || null,
         desiredDate: desiredDateObj,
-        totalPrice: ticketPrice,
+        totalPrice: totalPriceForAllTickets, // Total for all tickets
+        adultTickets: adultTickets,
+        childTickets: childTickets,
+        adultPrice: adultPrice,
+        childPrice: childPrice,
         status: 'PENDING',
         tripId: null // Will be set when manager creates the trip
       },
@@ -179,7 +237,9 @@ export default defineEventHandler(async (event) => {
       customerPhone: ticket.customerPhone,
       desiredDate: ticket.desiredDate,
       totalPrice: ticket.totalPrice,
-      serviceType: serviceType
+      serviceType: serviceType,
+      adultTickets: adultTickets,
+      childTickets: childTickets
     })
 
     // Send confirmation to customer if they have Telegram

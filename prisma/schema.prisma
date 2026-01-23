@@ -256,7 +256,13 @@ model GroupTripTicket {
   
   // Status and pricing
   status          GroupTripTicketStatus @default(PENDING)
-  totalPrice      Int       // Ticket price
+  totalPrice      Int       // Total price for all tickets
+  
+  // Adult and child tickets
+  adultTickets    Int       @default(0) // Number of adult tickets
+  childTickets    Int       @default(0) // Number of child tickets (up to 12 years old)
+  adultPrice      Int?      // Price per adult ticket (stored for reference)
+  childPrice      Int?      // Price per child ticket (50% of adult, stored for reference)
   
   // Timestamps
   createdAt       DateTime  @default(now())
