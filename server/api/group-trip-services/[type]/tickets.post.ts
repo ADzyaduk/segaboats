@@ -155,6 +155,10 @@ export default defineEventHandler(async (event) => {
     const adultTickets = body.adultTickets ?? 1
     const childTickets = body.childTickets ?? 0
     
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.post.ts:before-calculation',message:'Received ticket request',data:{serviceType,servicePrice:service.price,bodyAdultTickets:body.adultTickets,bodyChildTickets:body.childTickets,adultTickets,childTickets},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
+    
     if (adultTickets < 0 || childTickets < 0) {
       throw createError({
         statusCode: 400,
@@ -192,6 +196,10 @@ export default defineEventHandler(async (event) => {
     const adultTotal = adultPrice * adultTickets
     const childTotal = childPrice * childTickets
     const totalPriceForAllTickets = adultTotal + childTotal
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.post.ts:after-calculation',message:'Calculated ticket prices',data:{servicePrice:service.price,ticketPrice,adultTickets,childTickets,totalTickets,adultPrice,childPrice,adultTotal,childTotal,totalPriceForAllTickets},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
 
     console.log('[tickets] Ticket calculation:', {
       servicePrice: service.price,

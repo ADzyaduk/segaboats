@@ -6,7 +6,15 @@ const ticketId = route.params.id as string
 
 // Fetch ticket
 const { data, error } = await useFetch(`/api/my-tickets/${ticketId}`)
-const ticket = computed(() => data.value?.data)
+const ticket = computed(() => {
+  const t = data.value?.data
+  // #region agent log
+  if (t) {
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'my-tickets/[id].vue:ticket',message:'Ticket loaded from API',data:{ticketId:t.id,totalPrice:t.totalPrice,adultTickets:t.adultTickets,childTickets:t.childTickets,adultPrice:t.adultPrice,childPrice:t.childPrice},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  }
+  // #endregion
+  return t
+})
 
 // Telegram bot link for notifications
 const telegramBotUsername = config.public.telegramBotUsername || 'v-more_bot'

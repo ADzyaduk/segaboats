@@ -41,15 +41,31 @@ const adultPrice = computed(() => {
   if (!selectedService.value) return 0
   const price = selectedService.value.price
   const num = typeof price === 'string' ? Number(price) : price
-  return num && num > 0 ? num : 0
+  const result = num && num > 0 ? num : 0
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'group-trips/index.vue:adultPrice',message:'Calculated adultPrice',data:{selectedService:selectedService.value?.title,rawPrice:price,priceType:typeof price,convertedPrice:num,result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  return result
 })
 
 const childPrice = computed(() => Math.floor(adultPrice.value * 0.5))
 
-const adultTotal = computed(() => adultPrice.value * adultTickets.value)
+const adultTotal = computed(() => {
+  const result = adultPrice.value * adultTickets.value
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'group-trips/index.vue:adultTotal',message:'Calculated adultTotal',data:{adultPrice:adultPrice.value,adultTickets:adultTickets.value,result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  return result
+})
 const childTotal = computed(() => childPrice.value * childTickets.value)
 
-const totalPrice = computed(() => adultTotal.value + childTotal.value)
+const totalPrice = computed(() => {
+  const result = adultTotal.value + childTotal.value
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'group-trips/index.vue:totalPrice',message:'Calculated totalPrice',data:{adultTotal:adultTotal.value,childTotal:childTotal.value,adultTickets:adultTickets.value,childTickets:childTickets.value,result},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  return result
+})
 const totalTickets = computed(() => adultTickets.value + childTickets.value)
 
 // Auto-fill from Telegram
@@ -134,6 +150,20 @@ const handlePurchase = async () => {
 
   isSubmitting.value = true
 
+  const requestBody = {
+    customerName: customerName.value.trim(),
+    customerPhone: phoneValidation.formatted,
+    customerEmail: customerEmail.value.trim() || undefined,
+    desiredDate: desiredDate.value.toDate(getLocalTimeZone()).toISOString(),
+    telegramUserId: telegramUser.value?.id?.toString(),
+    adultTickets: adultTickets.value,
+    childTickets: childTickets.value
+  }
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'group-trips/index.vue:handlePurchase',message:'Sending request to server',data:{serviceType:selectedService.value.type,requestBody,clientCalculatedTotal:totalPrice.value,adultTickets:adultTickets.value,childTickets:childTickets.value},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+  // #endregion
+
   try {
     const response = await $fetch<{
       success: boolean
@@ -141,16 +171,12 @@ const handlePurchase = async () => {
       error?: string
     }>(`/api/group-trip-services/${selectedService.value.type}/tickets`, {
       method: 'POST',
-      body: {
-        customerName: customerName.value.trim(),
-        customerPhone: phoneValidation.formatted,
-        customerEmail: customerEmail.value.trim() || undefined,
-        desiredDate: desiredDate.value.toDate(getLocalTimeZone()).toISOString(),
-        telegramUserId: telegramUser.value?.id?.toString(),
-        adultTickets: adultTickets.value,
-        childTickets: childTickets.value
-      }
+      body: requestBody
     })
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'group-trips/index.vue:handlePurchase',message:'Received response from server',data:{success:response.success,ticketId:response.data?.id,serverTotalPrice:response.data?.totalPrice,serverAdultTickets:response.data?.adultTickets,serverChildTickets:response.data?.childTickets},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
 
     if (response.success && response.data) {
       const count = total

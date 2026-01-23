@@ -174,6 +174,10 @@ export async function sendTelegramMessageWithId(message: TelegramMessage): Promi
     console.log('[telegram] Message preview:', message.text.substring(0, 100) + '...')
     console.log('[telegram] Full message body:', JSON.stringify(message, null, 2))
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'telegram.ts:sendTelegramMessageWithId',message:'Before fetch to Telegram API',data:{url,chatId:message.chat_id,chatIdType:typeof message.chat_id,textLength:message.text?.length,hasReplyMarkup:!!message.reply_markup,messageBody:JSON.stringify(message)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -183,6 +187,10 @@ export async function sendTelegramMessageWithId(message: TelegramMessage): Promi
     })
 
     const result = await response.json()
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'telegram.ts:sendTelegramMessageWithId',message:'After fetch to Telegram API',data:{ok:result.ok,errorCode:result.error_code,errorDescription:result.description,fullResponse:JSON.stringify(result)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     
     if (!result.ok) {
       console.error('[telegram] ❌ Telegram API error - FULL RESPONSE:', JSON.stringify(result, null, 2))
@@ -217,11 +225,18 @@ export async function sendAdminNotification(
   text: string,
   buttons?: { inline_keyboard: any[][] }
 ): Promise<{ success: boolean; messageId?: number }> {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'telegram.ts:sendAdminNotification',message:'Entry: sendAdminNotification called',data:{chatId,chatIdType:typeof chatId,textLength:text.length,hasButtons:!!buttons},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
+  
   // Convert chat_id to number if it's a numeric string (Telegram API prefers numbers for user IDs)
   let finalChatId: string | number = chatId
   if (typeof chatId === 'string' && /^\d+$/.test(chatId.trim())) {
     finalChatId = Number(chatId.trim())
     console.log('[telegram] Converted chat_id from string to number:', chatId, '->', finalChatId)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'telegram.ts:sendAdminNotification',message:'Converted chatId to number',data:{originalChatId:chatId,finalChatId,finalChatIdType:typeof finalChatId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
   }
 
   const message: TelegramMessage = {
@@ -242,8 +257,18 @@ export async function sendAdminNotification(
     has_reply_markup: !!message.reply_markup,
     reply_markup_type: message.reply_markup ? typeof message.reply_markup : 'none'
   })
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'telegram.ts:sendAdminNotification',message:'Before sendTelegramMessageWithId',data:{chatId:message.chat_id,chatIdType:typeof message.chat_id,textLength:message.text.length,hasReplyMarkup:!!message.reply_markup,replyMarkup:message.reply_markup?JSON.stringify(message.reply_markup):null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
 
-  return sendTelegramMessageWithId(message)
+  const result = await sendTelegramMessageWithId(message)
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'telegram.ts:sendAdminNotification',message:'After sendTelegramMessageWithId',data:{success:result.success,messageId:result.messageId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
+
+  return result
 }
 
 // Format booking message for admin

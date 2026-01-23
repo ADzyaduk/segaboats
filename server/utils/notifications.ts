@@ -130,8 +130,15 @@ export async function notifyAdminNewTicket(ticket: {
 }): Promise<{ success: boolean; messageId?: number }> {
   console.log('[notifications] 📤 Attempting to notify admin about new ticket:', ticket.id)
   
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'Entry: notifyAdminNewTicket called',data:{ticketId:ticket.id,serviceTitle:ticket.serviceTitle,totalPrice:ticket.totalPrice,adultTickets:ticket.adultTickets,childTickets:ticket.childTickets},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
+  
   try {
     const adminChatId = getAdminChatId()
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'Got adminChatId',data:{adminChatId,hasAdminChatId:!!adminChatId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     if (!adminChatId) {
       console.error('[notifications] ❌ Cannot notify admin: TELEGRAM_ADMIN_CHAT_ID not configured')
       return { success: false }
@@ -164,7 +171,13 @@ export async function notifyAdminNewTicket(ticket: {
     }
 
     console.log('[notifications] 📨 Sending notification to admin chat:', adminChatId)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'Before sendAdminNotification',data:{adminChatId,messageLength:formattedMessage.length,hasButtons:!!buttons,buttons:JSON.stringify(buttons)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     const result = await sendAdminNotification(adminChatId, formattedMessage, buttons)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'After sendAdminNotification',data:{success:result.success,messageId:result.messageId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     
     if (result.success) {
       console.log('[notifications] ✅ Successfully notified admin about ticket:', ticket.id, 'Message ID:', result.messageId)
