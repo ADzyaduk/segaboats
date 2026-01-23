@@ -523,7 +523,13 @@ export default defineEventHandler(async (event) => {
       const { callback_query } = update
       const data = callback_query.data
       const adminChatId = config.telegramAdminChatId || '413553084'
-      const isAdmin = String(callback_query.from.id) === adminChatId
+      const isAdmin = String(callback_query.from.id) === String(adminChatId)
+      console.log('[webhook] Callback query from user:', {
+        userId: callback_query.from.id,
+        adminChatId,
+        isAdmin,
+        callbackData: data
+      })
 
       // Handle booking confirmation (admin only)
       if (data?.startsWith('confirm_booking_') && isAdmin) {
@@ -717,6 +723,13 @@ export default defineEventHandler(async (event) => {
       // Handle ticket confirmation (admin only)
       if (data?.startsWith('confirm_ticket_') && isAdmin) {
         const ticketId = data.replace('confirm_ticket_', '')
+        console.log('[webhook] Processing confirm_ticket callback:', {
+          ticketId,
+          callbackData: data,
+          isAdmin,
+          adminChatId: config.telegramAdminChatId,
+          userId: callback_query.from.id
+        })
         
         try {
           const ticket = await prisma.groupTripTicket.findUnique({
@@ -813,6 +826,13 @@ export default defineEventHandler(async (event) => {
       // Handle ticket cancellation (admin only)
       if (data?.startsWith('cancel_ticket_') && isAdmin) {
         const ticketId = data.replace('cancel_ticket_', '')
+        console.log('[webhook] Processing cancel_ticket callback:', {
+          ticketId,
+          callbackData: data,
+          isAdmin,
+          adminChatId: config.telegramAdminChatId,
+          userId: callback_query.from.id
+        })
         
         try {
           const ticket = await prisma.groupTripTicket.findUnique({

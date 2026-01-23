@@ -164,6 +164,12 @@ export async function notifyAdminNewTicket(ticket: {
     }
 
     console.log('[notifications] ✓ Admin chat ID found, formatting message...')
+    console.log('[notifications] Ticket data for message:', {
+      ticketId: ticket.id,
+      totalPrice: ticket.totalPrice,
+      adultTickets: ticket.adultTickets ?? 1,
+      childTickets: ticket.childTickets ?? 0
+    })
     const formattedMessage = formatTicketMessage({
       type: 'new',
       ticketId: ticket.id,
