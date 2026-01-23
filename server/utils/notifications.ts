@@ -195,6 +195,14 @@ export async function notifyAdminNewTicket(ticket: {
       console.warn('[notifications] ⚠️ Callback data exceeds 64 bytes limit, using shorter format')
       // Use shorter format if needed (last 20 chars of ticket ID)
       const shortId = ticket.id.slice(-20)
+      // Clean phone number for tel: URL (remove all non-digit characters except +)
+      const cleanPhone = ticket.customerPhone.replace(/[^\d+]/g, '')
+      console.log('[notifications] Phone number cleanup (short callback):', {
+        original: ticket.customerPhone,
+        cleaned: cleanPhone,
+        telUrl: `tel:${cleanPhone}`
+      })
+      
       const buttons = {
         inline_keyboard: [
           [
@@ -202,7 +210,7 @@ export async function notifyAdminNewTicket(ticket: {
             { text: '❌ Отклонить', callback_data: `cnl_${shortId}` }
           ],
           [
-            { text: '📞 Позвонить', url: `tel:${ticket.customerPhone.replace(/[^\d+]/g, '')}` }
+            { text: '📞 Позвонить', url: `tel:${cleanPhone}` }
           ]
         ]
       }
@@ -225,15 +233,23 @@ export async function notifyAdminNewTicket(ticket: {
       return result
     }
     
+    // Clean phone number for tel: URL (remove all non-digit characters except +)
+    const cleanPhone = ticket.customerPhone.replace(/[^\d+]/g, '')
+    console.log('[notifications] Phone number cleanup:', {
+      original: ticket.customerPhone,
+      cleaned: cleanPhone,
+      telUrl: `tel:${cleanPhone}`
+    })
+    
     const buttons = {
       inline_keyboard: [
         [
           { text: '✅ Подтвердить', callback_data: confirmCallback },
           { text: '❌ Отклонить', callback_data: cancelCallback }
         ],
-          [
-            { text: '📞 Позвонить', url: `tel:${ticket.customerPhone.replace(/[^\d+]/g, '')}` }
-          ]
+        [
+          { text: '📞 Позвонить', url: `tel:${cleanPhone}` }
+        ]
       ]
     }
 
