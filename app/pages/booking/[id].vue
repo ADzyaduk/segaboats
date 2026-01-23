@@ -16,24 +16,6 @@ const telegramNotifyLink = computed(() => {
   return `https://t.me/${telegramBotUsername}?start=booking_${bookingId}`
 })
 
-// Modal state
-const showTelegramModal = ref(false)
-
-// Show modal for web users who haven't connected Telegram
-onMounted(() => {
-  if (!isTelegram.value && booking.value) {
-    // Check if user has seen the modal for this booking
-    const modalSeen = localStorage.getItem(`telegram_modal_seen_booking_${bookingId}`)
-    
-    if (!modalSeen) {
-      // Show modal after 2 seconds
-      setTimeout(() => {
-        showTelegramModal.value = true
-      }, 2000)
-    }
-  }
-})
-
 // SEO
 useSeoMeta({
   title: 'Бронирование подтверждено',
@@ -270,11 +252,5 @@ const statusInfo = computed(() => {
         </div>
       </div>
     </UContainer>
-
-    <!-- Telegram Subscribe Modal -->
-    <TelegramSubscribeModal
-      v-model:open="showTelegramModal"
-      :booking-id="bookingId"
-    />
   </div>
 </template>

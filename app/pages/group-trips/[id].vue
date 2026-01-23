@@ -19,8 +19,6 @@ const customerEmail = ref('')
 const adultTickets = ref(1)
 const childTickets = ref(0)
 const phoneError = ref<string | null>(null)
-const showTelegramModal = ref(false)
-const lastTicketId = ref<string | null>(null)
 
 const onPhoneInput = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -34,16 +32,6 @@ onMounted(() => {
     customerName.value = [telegramUser.value.first_name, telegramUser.value.last_name]
       .filter(Boolean)
       .join(' ')
-  }
-  
-  // Show Telegram modal for web users
-  if (!isTelegram.value) {
-    const modalSeen = localStorage.getItem('telegram_modal_seen_trip')
-    if (!modalSeen) {
-      setTimeout(() => {
-        showTelegramModal.value = true
-      }, 2000)
-    }
   }
 })
 
@@ -93,6 +81,17 @@ const handlePurchase = async () => {
     return
   }
 
+  // Validate prices
+  if (adultPrice.value <= 0) {
+    toast.error('Ошибка', 'Некорректная цена билета. Обратитесь к администратору.')
+    return
+  }
+
+  if (totalPrice.value <= 0) {
+    toast.error('Ошибка', 'Ошибка расчета стоимости. Проверьте количество билетов.')
+    return
+  }
+
   const phoneValidation = validatePhone(customerPhone.value)
   if (!phoneValidation.isValid) {
     phoneError.value = phoneValidation.error || 'Некорректный формат телефона'
@@ -120,15 +119,6 @@ const handlePurchase = async () => {
         `Заказано ${ticketCount} ${ticketText}. Мы свяжемся с вами для подтверждения`
       )
       showBookingSlideover.value = false
-      
-      // Save ticket ID for modal
-      lastTicketId.value = ticket.id
-      
-      // Show Telegram modal for web users
-      if (!isTelegram.value) {
-        showTelegramModal.value = true
-      }
-      
       await navigateTo(`/my-tickets/${ticket.id}`)
     }
   } catch (error: any) {
@@ -506,25 +496,25 @@ useSeoMeta({
           </UCard>
 
           <!-- Ticket Selection Header -->
-          <div class="pb-2 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <div class="pb-3 border-b-2 border-primary-200 dark:border-primary-800 mb-4">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
               Выберите количество билетов
             </h3>
-            <p class="text-sm text-gray-500 mt-1">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
               Детские билеты (до 12 лет) - скидка 50%
             </p>
           </div>
 
           <!-- Adult Tickets -->
-          <div>
-            <label for="trip-adult-tickets" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+          <div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg mb-3">
+            <label for="trip-adult-tickets" class="block text-base font-semibold mb-3 text-gray-900 dark:text-white">
               Взрослых билетов <span class="text-error-500">*</span>
             </label>
             <div class="flex items-center gap-3">
               <UButton
                 variant="outline"
-                color="neutral"
-                size="sm"
+                color="primary"
+                size="md"
                 :disabled="adultTickets <= 0"
                 @click="adultTickets = Math.max(0, adultTickets - 1)"
               >
@@ -536,35 +526,36 @@ useSeoMeta({
                 type="number"
                 min="0"
                 :max="maxTickets"
-                class="w-20 text-center"
+                class="w-24 text-center text-lg font-semibold"
+                size="md"
               />
               <UButton
                 variant="outline"
-                color="neutral"
-                size="sm"
+                color="primary"
+                size="md"
                 :disabled="totalTickets >= maxTickets"
                 @click="adultTickets = Math.min(maxTickets - childTickets, adultTickets + 1)"
               >
                 <UIcon name="i-heroicons-plus" />
               </UButton>
               <div class="flex-1 text-right">
-                <span class="text-sm text-gray-600 dark:text-gray-400">
-                  × {{ formatPrice(adultPrice) }} = {{ formatPrice(adultTotal) }}
-                </span>
+                <div class="text-base font-semibold text-gray-900 dark:text-white">
+                  {{ adultTickets }} × {{ formatPrice(adultPrice) }} = <span class="text-primary-600 dark:text-primary-400">{{ formatPrice(adultTotal) }}</span>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Child Tickets -->
-          <div>
-            <label for="trip-child-tickets" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-              Детских билетов (до 12 лет) <span class="text-xs text-gray-500">-50%</span>
+          <div class="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg mb-3">
+            <label for="trip-child-tickets" class="block text-base font-semibold mb-3 text-gray-900 dark:text-white">
+              Детских билетов (до 12 лет) <span class="text-xs text-success-600 dark:text-success-400 font-normal">-50%</span>
             </label>
             <div class="flex items-center gap-3">
               <UButton
                 variant="outline"
-                color="neutral"
-                size="sm"
+                color="primary"
+                size="md"
                 :disabled="childTickets <= 0"
                 @click="childTickets = Math.max(0, childTickets - 1)"
               >
@@ -576,24 +567,25 @@ useSeoMeta({
                 type="number"
                 min="0"
                 :max="maxTickets"
-                class="w-20 text-center"
+                class="w-24 text-center text-lg font-semibold"
+                size="md"
               />
               <UButton
                 variant="outline"
-                color="neutral"
-                size="sm"
+                color="primary"
+                size="md"
                 :disabled="totalTickets >= maxTickets"
                 @click="childTickets = Math.min(maxTickets - adultTickets, childTickets + 1)"
               >
                 <UIcon name="i-heroicons-plus" />
               </UButton>
               <div class="flex-1 text-right">
-                <span class="text-sm text-gray-600 dark:text-gray-400">
-                  × {{ formatPrice(childPrice) }} = {{ formatPrice(childTotal) }}
-                </span>
+                <div class="text-base font-semibold text-gray-900 dark:text-white">
+                  {{ childTickets }} × {{ formatPrice(childPrice) }} = <span class="text-primary-600 dark:text-primary-400">{{ formatPrice(childTotal) }}</span>
+                </div>
               </div>
             </div>
-            <p class="text-xs text-gray-500 mt-1">
+            <p class="text-xs text-gray-500 mt-2">
               Детский билет стоит 50% от взрослого
             </p>
           </div>
@@ -701,11 +693,5 @@ useSeoMeta({
         </div>
       </template>
     </USlideover>
-
-    <!-- Telegram Subscribe Modal -->
-    <TelegramSubscribeModal
-      v-model:open="showTelegramModal"
-      :ticket-id="lastTicketId || undefined"
-    />
   </div>
 </template>

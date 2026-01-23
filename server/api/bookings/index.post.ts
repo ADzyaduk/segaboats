@@ -197,12 +197,15 @@ export default defineEventHandler(async (event) => {
         console.log('[bookings] ✅ Admin notification sent successfully, message ID:', notificationResult.messageId)
       } else {
         console.error('[bookings] ❌ Failed to send admin notification for booking:', booking.id)
+        console.error('[bookings] Notification result:', JSON.stringify(notificationResult, null, 2))
       }
     } catch (error: any) {
       console.error('[bookings] ❌ Error sending admin notification:', {
         bookingId: booking.id,
         error: error?.message,
-        stack: error?.stack
+        stack: error?.stack,
+        name: error?.name,
+        cause: error?.cause
       })
       // Не прерываем создание бронирования при ошибке уведомления
     }

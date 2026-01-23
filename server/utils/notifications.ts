@@ -109,6 +109,7 @@ export async function notifyAdminNewBooking(booking: {
       console.log('[notifications] ✅ Successfully notified admin about booking:', booking.id, 'Message ID:', result.messageId)
     } else {
       console.error('[notifications] ❌ Failed to notify admin about booking:', booking.id)
+      console.error('[notifications] Result details:', result)
     }
     
     return result
@@ -177,6 +178,7 @@ export async function notifyAdminNewTicket(ticket: {
       console.log('[notifications] ✅ Successfully notified admin about ticket:', ticket.id, 'Message ID:', result.messageId)
     } else {
       console.error('[notifications] ❌ Failed to notify admin about ticket:', ticket.id)
+      console.error('[notifications] Result details:', result)
     }
     
     return result
