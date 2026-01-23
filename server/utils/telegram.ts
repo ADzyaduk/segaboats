@@ -246,8 +246,21 @@ export async function sendAdminNotification(
   }
 
   if (buttons) {
+    // Ensure reply_markup is properly formatted as JSON object (not string)
+    // Telegram API expects the object directly, not a JSON string
     message.reply_markup = buttons
     console.log('[telegram] Reply markup:', JSON.stringify(buttons, null, 2))
+    
+    // Validate callback_data lengths (max 64 bytes)
+    if (buttons.inline_keyboard) {
+      for (const row of buttons.inline_keyboard) {
+        for (const button of row) {
+          if (button.callback_data && button.callback_data.length > 64) {
+            console.error('[telegram] ❌ Callback data exceeds 64 bytes:', button.callback_data, 'Length:', button.callback_data.length)
+          }
+        }
+      }
+    }
   }
 
   console.log('[telegram] Final message before sending:', {

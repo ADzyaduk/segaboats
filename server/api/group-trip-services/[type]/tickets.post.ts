@@ -88,6 +88,14 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Log service price from database for debugging
+    console.log('[tickets] Service from database:', {
+      type: service.type,
+      title: service.title,
+      price: service.price,
+      priceType: typeof service.price
+    })
+
     // Validate desired date if provided
     let desiredDateObj: Date | null = null
     if (body.desiredDate) {
@@ -136,6 +144,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Validate price before creating ticket
+    // IMPORTANT: Use the price from the database, not from the client request
+    // The client may show cached or incorrect prices, but we must use the authoritative source
     const ticketPrice = Number(service.price)
     if (!ticketPrice || ticketPrice <= 0 || isNaN(ticketPrice)) {
       throw createError({
@@ -143,6 +153,13 @@ export default defineEventHandler(async (event) => {
         message: 'Некорректная цена услуги. Обратитесь к администратору.'
       })
     }
+    
+    console.log('[tickets] Using ticket price from database:', {
+      servicePrice: service.price,
+      ticketPrice,
+      serviceType,
+      serviceTitle: service.title
+    })
 
     console.log('[tickets] Creating ticket with price:', {
       serviceType,

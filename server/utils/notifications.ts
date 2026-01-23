@@ -82,16 +82,38 @@ export async function notifyAdminNewBooking(booking: {
       customerNotes: booking.customerNotes
     })
 
-    const buttons = {
-      inline_keyboard: [
-        [
-          { text: '✅ Подтвердить', callback_data: `confirm_booking_${booking.id}` },
-          { text: '❌ Отклонить', callback_data: `cancel_booking_${booking.id}` }
-        ],
-        [
-          { text: '📞 Позвонить', url: `tel:${booking.customerPhone.replace(/\s/g, '')}` }
+    // Build buttons with callback_data length check (max 64 bytes)
+    const confirmCallback = `confirm_booking_${booking.id}`
+    const cancelCallback = `cancel_booking_${booking.id}`
+    
+    // Check callback_data length (Telegram limit: 64 bytes)
+    let buttons
+    if (confirmCallback.length > 64 || cancelCallback.length > 64) {
+      console.warn('[notifications] ⚠️ Callback data exceeds 64 bytes limit, using shorter format')
+      const shortId = booking.id.slice(-20)
+      buttons = {
+        inline_keyboard: [
+          [
+            { text: '✅ Подтвердить', callback_data: `cfm_book_${shortId}` },
+            { text: '❌ Отклонить', callback_data: `cnl_book_${shortId}` }
+          ],
+          [
+            { text: '📞 Позвонить', url: `tel:${booking.customerPhone.replace(/\s/g, '')}` }
+          ]
         ]
-      ]
+      }
+    } else {
+      buttons = {
+        inline_keyboard: [
+          [
+            { text: '✅ Подтвердить', callback_data: confirmCallback },
+            { text: '❌ Отклонить', callback_data: cancelCallback }
+          ],
+          [
+            { text: '📞 Позвонить', url: `tel:${booking.customerPhone.replace(/\s/g, '')}` }
+          ]
+        ]
+      }
     }
 
     console.log('[notifications] 📨 Sending notification to admin chat:', adminChatId)
@@ -158,11 +180,50 @@ export async function notifyAdminNewTicket(ticket: {
       childTickets: ticket.childTickets ?? 0
     })
 
+    // Build buttons with callback_data length check (max 64 bytes)
+    const confirmCallback = `confirm_ticket_${ticket.id}`
+    const cancelCallback = `cancel_ticket_${ticket.id}`
+    
+    // Check callback_data length (Telegram limit: 64 bytes)
+    if (confirmCallback.length > 64 || cancelCallback.length > 64) {
+      console.warn('[notifications] ⚠️ Callback data exceeds 64 bytes limit, using shorter format')
+      // Use shorter format if needed (last 20 chars of ticket ID)
+      const shortId = ticket.id.slice(-20)
+      const buttons = {
+        inline_keyboard: [
+          [
+            { text: '✅ Подтвердить', callback_data: `cfm_${shortId}` },
+            { text: '❌ Отклонить', callback_data: `cnl_${shortId}` }
+          ],
+          [
+            { text: '📞 Позвонить', url: `tel:${ticket.customerPhone.replace(/\s/g, '')}` }
+          ]
+        ]
+      }
+      console.log('[notifications] 📨 Sending notification to admin chat:', adminChatId)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'Before sendAdminNotification (short callback)',data:{adminChatId,messageLength:formattedMessage.length,hasButtons:!!buttons,buttons:JSON.stringify(buttons)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      const result = await sendAdminNotification(adminChatId, formattedMessage, buttons)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'After sendAdminNotification (short callback)',data:{success:result.success,messageId:result.messageId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
+      
+      if (result.success) {
+        console.log('[notifications] ✅ Successfully notified admin about ticket:', ticket.id, 'Message ID:', result.messageId)
+      } else {
+        console.error('[notifications] ❌ Failed to notify admin about ticket:', ticket.id)
+        console.error('[notifications] Result details:', result)
+      }
+      
+      return result
+    }
+    
     const buttons = {
       inline_keyboard: [
         [
-          { text: '✅ Подтвердить', callback_data: `confirm_ticket_${ticket.id}` },
-          { text: '❌ Отклонить', callback_data: `cancel_ticket_${ticket.id}` }
+          { text: '✅ Подтвердить', callback_data: confirmCallback },
+          { text: '❌ Отклонить', callback_data: cancelCallback }
         ],
         [
           { text: '📞 Позвонить', url: `tel:${ticket.customerPhone.replace(/\s/g, '')}` }
