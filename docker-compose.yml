@@ -32,10 +32,17 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-boats}:${POSTGRES_PASSWORD:-boats2026secret}@postgres:5432/${POSTGRES_DB:-boats2026}?schema=public
+      # Nuxt runtime config variables (with NUXT_ prefix for automatic mapping)
+      NUXT_TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      NUXT_TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID}
+      NUXT_TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      NUXT_PUBLIC_TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      # Legacy variables (for backward compatibility)
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
       TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
+      # Other variables
       N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-https://dequadomiror.beget.app/webhook}
       N8N_API_KEY: ${N8N_API_KEY}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin2026}

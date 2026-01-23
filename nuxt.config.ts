@@ -13,21 +13,25 @@ export default defineNuxtConfig({
   ],
 
   // Runtime config для переменных окружения
+  // В production Nuxt автоматически маппит переменные с префиксом NUXT_
+  // NUXT_TELEGRAM_BOT_TOKEN → telegramBotToken
+  // NUXT_PUBLIC_TELEGRAM_BOT_USERNAME → public.telegramBotUsername
   runtimeConfig: {
     // Серверные переменные (не доступны на клиенте)
+    // В production Nuxt автоматически читает из NUXT_* переменных окружения
+    // Значения по умолчанию используются только если переменные не установлены
     databaseUrl: process.env.DATABASE_URL,
-    telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
-    telegramWebhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET,
-    telegramAdminChatId: process.env.TELEGRAM_ADMIN_CHAT_ID || '413553084',
-    // Используем простые имена для n8n (NUXT_WEBHOOK_URL в .env)
+    telegramBotToken: '', // Будет прочитано из NUXT_TELEGRAM_BOT_TOKEN в production
+    telegramWebhookSecret: '', // Будет прочитано из NUXT_TELEGRAM_WEBHOOK_SECRET в production
+    telegramAdminChatId: '413553084', // Будет прочитано из NUXT_TELEGRAM_ADMIN_CHAT_ID в production
     webhookUrl: process.env.WEBHOOK_URL || 'https://v-more.ru/webhook',
     webhookApiKey: process.env.WEBHOOK_API_KEY || '',
-    adminPassword: process.env.ADMIN_PASSWORD || 'admin2026', // Пароль админ-панели
+    adminPassword: process.env.ADMIN_PASSWORD || 'admin2026',
 
     // Публичные переменные (доступны на клиенте)
     public: {
       appName: 'В Море!',
-      telegramBotUsername: process.env.TELEGRAM_BOT_USERNAME || 'SochiBoatsbot'
+      telegramBotUsername: 'SochiBoatsbot' // Будет прочитано из NUXT_PUBLIC_TELEGRAM_BOT_USERNAME в production
     }
   },
 
