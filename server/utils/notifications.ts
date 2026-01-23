@@ -101,7 +101,7 @@ export async function notifyAdminNewBooking(booking: {
             { text: '❌ Отклонить', callback_data: `cnl_book_${shortId}` }
           ],
           [
-            { text: '📞 Позвонить', url: `tel:${booking.customerPhone.replace(/\s/g, '')}` }
+            { text: '📞 Позвонить', url: `tel:${booking.customerPhone.replace(/[^\d+]/g, '')}` }
           ]
         ]
       }
@@ -113,7 +113,7 @@ export async function notifyAdminNewBooking(booking: {
             { text: '❌ Отклонить', callback_data: cancelCallback }
           ],
           [
-            { text: '📞 Позвонить', url: `tel:${booking.customerPhone.replace(/\s/g, '')}` }
+            { text: '📞 Позвонить', url: `tel:${booking.customerPhone.replace(/[^\d+]/g, '')}` }
           ]
         ]
       }
@@ -202,7 +202,7 @@ export async function notifyAdminNewTicket(ticket: {
             { text: '❌ Отклонить', callback_data: `cnl_${shortId}` }
           ],
           [
-            { text: '📞 Позвонить', url: `tel:${ticket.customerPhone.replace(/\s/g, '')}` }
+            { text: '📞 Позвонить', url: `tel:${ticket.customerPhone.replace(/[^\d+]/g, '')}` }
           ]
         ]
       }
@@ -231,9 +231,9 @@ export async function notifyAdminNewTicket(ticket: {
           { text: '✅ Подтвердить', callback_data: confirmCallback },
           { text: '❌ Отклонить', callback_data: cancelCallback }
         ],
-        [
-          { text: '📞 Позвонить', url: `tel:${ticket.customerPhone.replace(/\s/g, '')}` }
-        ]
+          [
+            { text: '📞 Позвонить', url: `tel:${ticket.customerPhone.replace(/[^\d+]/g, '')}` }
+          ]
       ]
     }
 
