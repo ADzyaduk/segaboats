@@ -23,31 +23,38 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Get service from database (source of truth for prices)
-    const dbService = await prisma.groupTripService.findUnique({
-      where: { type: type as 'SHORT' | 'MEDIUM' | 'FISHING' }
-    })
-
-    if (!dbService || !dbService.isActive) {
+    // Get static config (source of truth for prices)
+    const staticService = getGroupTripServiceByType(type as 'SHORT' | 'MEDIUM' | 'FISHING')
+    
+    if (!staticService) {
       throw createError({
         statusCode: 404,
         message: 'Услуга не найдена'
       })
     }
 
-    // Get static config for fallback (titles, descriptions, etc.)
-    const staticService = getGroupTripServiceByType(type as 'SHORT' | 'MEDIUM' | 'FISHING')
+    // Get service from database for additional fields
+    const dbService = await prisma.groupTripService.findUnique({
+      where: { type: type as 'SHORT' | 'MEDIUM' | 'FISHING' }
+    })
+
+    if (dbService && !dbService.isActive) {
+      throw createError({
+        statusCode: 404,
+        message: 'Услуга не найдена'
+      })
+    }
     
-    // Merge: use DB price, but static config for other fields
+    // Merge: use static config price, but DB for other fields
     const service = {
-      id: dbService.id,
-      type: dbService.type,
-      duration: dbService.duration,
-      price: dbService.price, // Use price from database (source of truth)
-      title: staticService?.title || dbService.title,
-      description: staticService?.description || dbService.description || '',
-      image: dbService.image || staticService?.image,
-      isActive: dbService.isActive
+      id: dbService?.id || staticService.id,
+      type: staticService.type,
+      duration: staticService.duration,
+      price: staticService.price, // Use price from static config (source of truth)
+      title: staticService.title,
+      description: staticService.description,
+      image: dbService?.image || staticService.image,
+      isActive: dbService?.isActive ?? staticService.isActive
     }
 
     return {

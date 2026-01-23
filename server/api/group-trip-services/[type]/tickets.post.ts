@@ -59,54 +59,49 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Get service
-    const service = await prisma.groupTripService.findUnique({
-      where: {
-        type: serviceType as 'SHORT' | 'MEDIUM' | 'FISHING'
-      }
-    })
-
-    if (!service) {
+    // Get static config (source of truth for prices)
+    const { getGroupTripServiceByType } = await import('~~/server/utils/groupTripServices')
+    const staticService = getGroupTripServiceByType(serviceType as 'SHORT' | 'MEDIUM' | 'FISHING')
+    
+    if (!staticService) {
       throw createError({
         statusCode: 404,
         message: 'Услуга не найдена'
       })
     }
 
-    if (!service.isActive) {
+    // Get service from database for validation
+    const service = await prisma.groupTripService.findUnique({
+      where: {
+        type: serviceType as 'SHORT' | 'MEDIUM' | 'FISHING'
+      }
+    })
+
+    if (service && !service.isActive) {
       throw createError({
         statusCode: 400,
         message: 'Услуга недоступна для покупки'
       })
     }
 
+    // Use price from static config (source of truth)
+    const servicePrice = staticService.price
+
     // Validate price
-    if (!service.price || service.price <= 0) {
+    if (!servicePrice || servicePrice <= 0) {
       throw createError({
         statusCode: 500,
         message: 'Цена услуги не настроена. Обратитесь к администратору.'
       })
     }
 
-    // Log service price from database for debugging
-    console.log('[tickets] Service from database:', {
-      type: service.type,
-      title: service.title,
-      price: service.price,
-      priceType: typeof service.price
+    // Log service price from static config for debugging
+    console.log('[tickets] Service from static config:', {
+      type: staticService.type,
+      title: staticService.title,
+      price: servicePrice,
+      priceType: typeof servicePrice
     })
-    
-    // IMPORTANT: Warn if static config price differs from database price
-    const { getGroupTripServiceByType } = await import('~~/server/utils/groupTripServices')
-    const staticService = getGroupTripServiceByType(serviceType as 'SHORT' | 'MEDIUM' | 'FISHING')
-    if (staticService && staticService.price !== service.price) {
-      console.warn('[tickets] ⚠️ Price mismatch detected!', {
-        serviceType,
-        staticConfigPrice: staticService.price,
-        databasePrice: service.price,
-        message: 'Static config and database prices differ. Database price will be used for calculations.'
-      })
-    }
 
     // Validate desired date if provided
     let desiredDateObj: Date | null = null
@@ -158,7 +153,7 @@ export default defineEventHandler(async (event) => {
     // Validate price before creating ticket
     // IMPORTANT: Use the price from the database, not from the client request
     // The client may show cached or incorrect prices, but we must use the authoritative source
-    const ticketPrice = Number(service.price)
+    const ticketPrice = Number(servicePrice)
     if (!ticketPrice || ticketPrice <= 0 || isNaN(ticketPrice)) {
       throw createError({
         statusCode: 500,
@@ -166,18 +161,18 @@ export default defineEventHandler(async (event) => {
       })
     }
     
-    console.log('[tickets] Using ticket price from database:', {
-      servicePrice: service.price,
+    console.log('[tickets] Using ticket price from static config:', {
+      servicePrice,
       ticketPrice,
       serviceType,
-      serviceTitle: service.title
+      serviceTitle: staticService.title
     })
 
     console.log('[tickets] Creating ticket with price:', {
       serviceType,
-      servicePrice: service.price,
+      servicePrice,
       ticketPrice,
-      serviceTitle: service.title
+      serviceTitle: staticService.title
     })
 
     // Get adult and child tickets (default to 1 adult for backward compatibility)
@@ -185,7 +180,7 @@ export default defineEventHandler(async (event) => {
     const childTickets = body.childTickets ?? 0
     
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.post.ts:before-calculation',message:'Received ticket request',data:{serviceType,servicePrice:service.price,bodyAdultTickets:body.adultTickets,bodyChildTickets:body.childTickets,adultTickets,childTickets},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.post.ts:before-calculation',message:'Received ticket request',data:{serviceType,servicePrice,bodyAdultTickets:body.adultTickets,bodyChildTickets:body.childTickets,adultTickets,childTickets},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
     // #endregion
     
     if (adultTickets < 0 || childTickets < 0) {
@@ -227,11 +222,11 @@ export default defineEventHandler(async (event) => {
     const totalPriceForAllTickets = adultTotal + childTotal
 
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.post.ts:after-calculation',message:'Calculated ticket prices',data:{servicePrice:service.price,ticketPrice,adultTickets,childTickets,totalTickets,adultPrice,childPrice,adultTotal,childTotal,totalPriceForAllTickets},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tickets.post.ts:after-calculation',message:'Calculated ticket prices',data:{servicePrice,ticketPrice,adultTickets,childTickets,totalTickets,adultPrice,childPrice,adultTotal,childTotal,totalPriceForAllTickets},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
     // #endregion
 
     console.log('[tickets] Ticket calculation:', {
-      servicePrice: service.price,
+      servicePrice,
       ticketPrice,
       adultTickets,
       childTickets,

@@ -5,27 +5,27 @@ import { prisma } from '~~/server/utils/db'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get services from database (source of truth for prices)
+    // Get static config (source of truth for prices)
+    const staticServices = getActiveGroupTripServices()
+    
+    // Get services from database for additional fields
     const dbServices = await prisma.groupTripService.findMany({
       where: { isActive: true },
       orderBy: { type: 'asc' }
     })
-
-    // Get static config for fallback (titles, descriptions, etc.)
-    const staticServices = getActiveGroupTripServices()
     
-    // Merge: use DB prices, but static config for other fields
-    const services = dbServices.map(dbService => {
-      const staticService = staticServices.find(s => s.type === dbService.type)
+    // Merge: use static config prices, but DB for other fields
+    const services = staticServices.map(staticService => {
+      const dbService = dbServices.find(s => s.type === staticService.type)
       return {
-        id: dbService.id,
-        type: dbService.type,
-        duration: dbService.duration,
-        price: dbService.price, // Use price from database (source of truth)
-        title: staticService?.title || dbService.title,
-        description: staticService?.description || dbService.description || '',
-        image: dbService.image || staticService?.image,
-        isActive: dbService.isActive
+        id: dbService?.id || staticService.id,
+        type: staticService.type,
+        duration: staticService.duration,
+        price: staticService.price, // Use price from static config (source of truth)
+        title: staticService.title,
+        description: staticService.description,
+        image: dbService?.image || staticService.image,
+        isActive: dbService?.isActive ?? staticService.isActive
       }
     })
 
