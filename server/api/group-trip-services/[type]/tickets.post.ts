@@ -95,6 +95,18 @@ export default defineEventHandler(async (event) => {
       price: service.price,
       priceType: typeof service.price
     })
+    
+    // IMPORTANT: Warn if static config price differs from database price
+    const { getGroupTripServiceByType } = await import('~~/server/utils/groupTripServices')
+    const staticService = getGroupTripServiceByType(serviceType as 'SHORT' | 'MEDIUM' | 'FISHING')
+    if (staticService && staticService.price !== service.price) {
+      console.warn('[tickets] ⚠️ Price mismatch detected!', {
+        serviceType,
+        staticConfigPrice: staticService.price,
+        databasePrice: service.price,
+        message: 'Static config and database prices differ. Database price will be used for calculations.'
+      })
+    }
 
     // Validate desired date if provided
     let desiredDateObj: Date | null = null

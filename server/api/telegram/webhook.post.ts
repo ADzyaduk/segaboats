@@ -721,15 +721,49 @@ export default defineEventHandler(async (event) => {
       }
 
       // Handle ticket confirmation (admin only)
+      // Support both full format (confirm_ticket_xxx) and short format (cfm_xxx)
+      let ticketId: string | null = null
       if (data?.startsWith('confirm_ticket_') && isAdmin) {
-        const ticketId = data.replace('confirm_ticket_', '')
-        console.log('[webhook] Processing confirm_ticket callback:', {
+        ticketId = data.replace('confirm_ticket_', '')
+        console.log('[webhook] Processing confirm_ticket callback (full format):', {
           ticketId,
           callbackData: data,
           isAdmin,
           adminChatId: config.telegramAdminChatId,
           userId: callback_query.from.id
         })
+      } else if (data?.startsWith('cfm_') && isAdmin) {
+        // Short format: cfm_ + last 20 chars of ticket ID
+        const shortId = data.replace('cfm_', '')
+        // Find ticket by matching last 20 chars of ID
+        const tickets = await prisma.groupTripTicket.findMany({
+          where: {
+            id: { endsWith: shortId }
+          },
+          take: 1
+        })
+        if (tickets.length > 0) {
+          ticketId = tickets[0].id
+          console.log('[webhook] Processing confirm_ticket callback (short format):', {
+            shortId,
+            ticketId,
+            callbackData: data,
+            isAdmin,
+            adminChatId: config.telegramAdminChatId,
+            userId: callback_query.from.id
+          })
+        } else {
+          console.error('[webhook] Ticket not found for short callback:', shortId)
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Билет не найден',
+            show_alert: true
+          })
+          return { ok: true }
+        }
+      }
+      
+      if (ticketId && isAdmin) {
         
         try {
           const ticket = await prisma.groupTripTicket.findUnique({
@@ -761,7 +795,7 @@ export default defineEventHandler(async (event) => {
 
           // Update ticket status
           const updatedTicket = await prisma.groupTripTicket.update({
-            where: { id: ticketId },
+            where: { id: cancelTicketId },
             data: { 
               status: 'CONFIRMED',
               confirmedAt: new Date()
@@ -824,19 +858,53 @@ export default defineEventHandler(async (event) => {
       }
 
       // Handle ticket cancellation (admin only)
+      // Support both full format (cancel_ticket_xxx) and short format (cnl_xxx)
+      let cancelTicketId: string | null = null
       if (data?.startsWith('cancel_ticket_') && isAdmin) {
-        const ticketId = data.replace('cancel_ticket_', '')
-        console.log('[webhook] Processing cancel_ticket callback:', {
-          ticketId,
+        cancelTicketId = data.replace('cancel_ticket_', '')
+        console.log('[webhook] Processing cancel_ticket callback (full format):', {
+          ticketId: cancelTicketId,
           callbackData: data,
           isAdmin,
           adminChatId: config.telegramAdminChatId,
           userId: callback_query.from.id
         })
+      } else if (data?.startsWith('cnl_') && isAdmin) {
+        // Short format: cnl_ + last 20 chars of ticket ID
+        const shortId = data.replace('cnl_', '')
+        // Find ticket by matching last 20 chars of ID
+        const tickets = await prisma.groupTripTicket.findMany({
+          where: {
+            id: { endsWith: shortId }
+          },
+          take: 1
+        })
+        if (tickets.length > 0) {
+          cancelTicketId = tickets[0].id
+          console.log('[webhook] Processing cancel_ticket callback (short format):', {
+            shortId,
+            ticketId: cancelTicketId,
+            callbackData: data,
+            isAdmin,
+            adminChatId: config.telegramAdminChatId,
+            userId: callback_query.from.id
+          })
+        } else {
+          console.error('[webhook] Ticket not found for short cancel callback:', shortId)
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Билет не найден',
+            show_alert: true
+          })
+          return { ok: true }
+        }
+      }
+      
+      if (cancelTicketId && isAdmin) {
         
         try {
           const ticket = await prisma.groupTripTicket.findUnique({
-            where: { id: ticketId },
+            where: { id: cancelTicketId },
             include: {
               service: { select: { title: true } },
               user: { select: { telegramId: true } }
@@ -863,7 +931,7 @@ export default defineEventHandler(async (event) => {
 
           // Update ticket status
           const updatedTicket = await prisma.groupTripTicket.update({
-            where: { id: ticketId },
+            where: { id: cancelTicketId },
             data: { 
               status: 'CANCELLED',
               cancelledAt: new Date()
