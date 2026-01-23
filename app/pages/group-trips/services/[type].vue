@@ -119,24 +119,56 @@ const handlePurchase = async () => {
 
 // Calculate prices
 const adultPrice = computed(() => {
-  return service.value?.price || 0
+  const price = service.value?.price
+  if (!price || price <= 0) {
+    console.warn('[tickets] Invalid service price:', price)
+    return 0
+  }
+  // Ensure price is a number
+  const numPrice = typeof price === 'string' ? parseFloat(price) : Number(price)
+  if (isNaN(numPrice) || numPrice <= 0) {
+    console.warn('[tickets] Invalid numeric price:', numPrice)
+    return 0
+  }
+  return numPrice
 })
 
 const childPrice = computed(() => {
-  return Math.floor(adultPrice.value * 0.5) // 50% от взрослого
+  const halfPrice = Math.floor(adultPrice.value * 0.5) // 50% от взрослого
+  return halfPrice
 })
 
 const adultTotal = computed(() => {
-  return adultPrice.value * adultTickets.value
+  const total = adultPrice.value * adultTickets.value
+  console.log('[tickets] Adult total calculation:', {
+    adultPrice: adultPrice.value,
+    adultTickets: adultTickets.value,
+    total
+  })
+  return total
 })
 
 const childTotal = computed(() => {
-  return childPrice.value * childTickets.value
+  const total = childPrice.value * childTickets.value
+  console.log('[tickets] Child total calculation:', {
+    childPrice: childPrice.value,
+    childTickets: childTickets.value,
+    total
+  })
+  return total
 })
 
 // Calculate total price
 const totalPrice = computed(() => {
-  return adultTotal.value + childTotal.value
+  const total = adultTotal.value + childTotal.value
+  console.log('[tickets] Total price calculation:', {
+    adultTotal: adultTotal.value,
+    childTotal: childTotal.value,
+    total,
+    adultTickets: adultTickets.value,
+    childTickets: childTickets.value
+  })
+  return total
 })
 
 const totalTickets = computed(() => {
@@ -257,6 +289,100 @@ useSeoMeta({
                   </div>
                 </div>
 
+                <!-- Ticket Selection -->
+                <div class="space-y-3 pt-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Количество билетов
+                  </label>
+                  
+                  <!-- Adult Tickets -->
+                  <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-600 dark:text-gray-400 flex-1">
+                      Взрослых:
+                    </label>
+                    <UButton
+                      variant="outline"
+                      color="neutral"
+                      size="xs"
+                      :disabled="adultTickets <= 0"
+                      @click="adultTickets = Math.max(0, adultTickets - 1)"
+                    >
+                      <UIcon name="i-heroicons-minus" class="w-3 h-3" />
+                    </UButton>
+                    <UInput
+                      v-model.number="adultTickets"
+                      type="number"
+                      min="0"
+                      max="10"
+                      class="w-16 text-center text-sm"
+                      size="xs"
+                    />
+                    <UButton
+                      variant="outline"
+                      color="neutral"
+                      size="xs"
+                      :disabled="totalTickets >= 10"
+                      @click="adultTickets = Math.min(10 - childTickets, adultTickets + 1)"
+                    >
+                      <UIcon name="i-heroicons-plus" class="w-3 h-3" />
+                    </UButton>
+                    <span class="text-xs text-gray-500 ml-2">
+                      × {{ formatPrice(adultPrice) }}
+                    </span>
+                  </div>
+
+                  <!-- Child Tickets -->
+                  <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-600 dark:text-gray-400 flex-1">
+                      Детских (до 12 лет):
+                    </label>
+                    <UButton
+                      variant="outline"
+                      color="neutral"
+                      size="xs"
+                      :disabled="childTickets <= 0"
+                      @click="childTickets = Math.max(0, childTickets - 1)"
+                    >
+                      <UIcon name="i-heroicons-minus" class="w-3 h-3" />
+                    </UButton>
+                    <UInput
+                      v-model.number="childTickets"
+                      type="number"
+                      min="0"
+                      max="10"
+                      class="w-16 text-center text-sm"
+                      size="xs"
+                    />
+                    <UButton
+                      variant="outline"
+                      color="neutral"
+                      size="xs"
+                      :disabled="totalTickets >= 10"
+                      @click="childTickets = Math.min(10 - adultTickets, childTickets + 1)"
+                    >
+                      <UIcon name="i-heroicons-plus" class="w-3 h-3" />
+                    </UButton>
+                    <span class="text-xs text-gray-500 ml-2">
+                      × {{ formatPrice(childPrice) }}
+                    </span>
+                  </div>
+
+                  <!-- Total -->
+                  <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex justify-between items-center">
+                      <span class="font-medium text-gray-900 dark:text-white">
+                        Итого:
+                      </span>
+                      <span class="text-lg font-bold text-primary-600 dark:text-primary-400">
+                        {{ formatPrice(totalPrice) }}
+                      </span>
+                    </div>
+                    <p v-if="totalTickets === 0" class="text-xs text-error-500 mt-1">
+                      Выберите хотя бы один билет
+                    </p>
+                  </div>
+                </div>
+
                 <UAlert
                   color="info"
                   variant="subtle"
@@ -272,9 +398,10 @@ useSeoMeta({
                   color="primary"
                   size="lg"
                   block
+                  :disabled="totalTickets < 1"
                   @click="openBookingSlideover"
                 >
-                  Заказать билет
+                  Заказать {{ totalTickets }} {{ totalTickets === 1 ? 'билет' : totalTickets < 5 ? 'билета' : 'билетов' }}
                 </UButton>
 
                 <p class="text-xs text-center text-gray-500">

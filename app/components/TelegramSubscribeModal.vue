@@ -13,6 +13,12 @@ const emit = defineEmits<{
 const config = useRuntimeConfig()
 const telegramBotUsername = config.public.telegramBotUsername || 'v-more_bot'
 
+// Use computed with getter/setter for v-model to work with props
+const isOpen = computed({
+  get: () => props.open,
+  set: (value: boolean) => emit('update:open', value)
+})
+
 const telegramNotifyLink = computed(() => {
   if (props.bookingId) {
     return `https://t.me/${telegramBotUsername}?start=booking_${props.bookingId}`
@@ -24,7 +30,7 @@ const telegramNotifyLink = computed(() => {
 })
 
 const closeModal = () => {
-  emit('update:open', false)
+  isOpen.value = false
   // Save to localStorage that user saw the modal
   if (props.bookingId) {
     localStorage.setItem(`telegram_modal_seen_booking_${props.bookingId}`, 'true')
@@ -41,7 +47,7 @@ const handleSubscribe = () => {
 </script>
 
 <template>
-  <UModal :model-value="open" @update:model-value="emit('update:open', $event)">
+  <UModal v-model:open="isOpen" @close="closeModal">
     <UCard>
       <template #header>
         <div class="flex items-center justify-between">

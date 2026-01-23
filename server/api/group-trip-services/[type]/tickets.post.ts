@@ -178,7 +178,14 @@ export default defineEventHandler(async (event) => {
     }
 
     // Calculate prices
-    const adultPrice = ticketPrice
+    const adultPrice = Number(ticketPrice)
+    if (isNaN(adultPrice) || adultPrice <= 0) {
+      throw createError({
+        statusCode: 500,
+        message: 'Некорректная цена услуги. Обратитесь к администратору.'
+      })
+    }
+    
     const childPrice = Math.floor(adultPrice * 0.5) // 50% от взрослого
     
     // Calculate total price for all tickets
@@ -187,6 +194,8 @@ export default defineEventHandler(async (event) => {
     const totalPriceForAllTickets = adultTotal + childTotal
 
     console.log('[tickets] Ticket calculation:', {
+      servicePrice: service.price,
+      ticketPrice,
       adultTickets,
       childTickets,
       totalTickets,
@@ -196,6 +205,14 @@ export default defineEventHandler(async (event) => {
       childTotal,
       totalPrice: totalPriceForAllTickets
     })
+    
+    // Validate calculated price
+    if (totalPriceForAllTickets <= 0 || isNaN(totalPriceForAllTickets)) {
+      throw createError({
+        statusCode: 500,
+        message: 'Ошибка расчета стоимости. Обратитесь к администратору.'
+      })
+    }
 
     // Create ticket with adult/child information
     const ticket = await prisma.groupTripTicket.create({

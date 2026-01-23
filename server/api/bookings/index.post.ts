@@ -178,18 +178,34 @@ export default defineEventHandler(async (event) => {
     })
 
     // Notify admin about new booking
-    await notifyAdminNewBooking({
-      id: booking.id,
-      boatName: booking.boat.name,
-      customerName: body.customerName,
-      customerPhone: body.customerPhone,
-      startDate,
-      hours: body.hours,
-      totalPrice,
-      passengers: body.passengers,
-      customerEmail: body.customerEmail || null,
-      customerNotes: body.customerNotes || null
-    })
+    console.log('[bookings] 📤 Attempting to send notification to admin for booking:', booking.id)
+    try {
+      const notificationResult = await notifyAdminNewBooking({
+        id: booking.id,
+        boatName: booking.boat.name,
+        customerName: body.customerName,
+        customerPhone: body.customerPhone,
+        startDate,
+        hours: body.hours,
+        totalPrice,
+        passengers: body.passengers,
+        customerEmail: body.customerEmail || null,
+        customerNotes: body.customerNotes || null
+      })
+      
+      if (notificationResult.success) {
+        console.log('[bookings] ✅ Admin notification sent successfully, message ID:', notificationResult.messageId)
+      } else {
+        console.error('[bookings] ❌ Failed to send admin notification for booking:', booking.id)
+      }
+    } catch (error: any) {
+      console.error('[bookings] ❌ Error sending admin notification:', {
+        bookingId: booking.id,
+        error: error?.message,
+        stack: error?.stack
+      })
+      // Не прерываем создание бронирования при ошибке уведомления
+    }
 
     // Send Telegram confirmation if user has telegram
     if (body.telegramUserId) {
