@@ -1,6 +1,7 @@
 // Purchase ticket for a group trip service (without specific trip)
 
 import { prisma } from '~~/server/utils/db'
+import { notifyAdminNewTicket } from '~~/server/utils/notifications'
 
 interface TicketBody {
   customerName: string
@@ -145,11 +146,42 @@ export default defineEventHandler(async (event) => {
             firstName: true,
             lastName: true,
             phone: true,
-            email: true
+            email: true,
+            telegramId: true
           }
         }
       }
     })
+
+    // Notify admin about new ticket
+    await notifyAdminNewTicket({
+      id: ticket.id,
+      serviceTitle: ticket.service.title,
+      customerName: ticket.customerName,
+      customerPhone: ticket.customerPhone,
+      desiredDate: ticket.desiredDate,
+      totalPrice: ticket.totalPrice,
+      serviceType: serviceType
+    })
+
+    // Send confirmation to customer if they have Telegram
+    if (body.telegramUserId) {
+      const { sendTelegramMessage } = await import('~~/server/utils/telegram')
+      await sendTelegramMessage({
+        chat_id: body.telegramUserId,
+        text: `
+🎫 <b>Билет заказан!</b>
+
+Услуга: ${ticket.service.title}
+💰 Сумма: ${ticket.totalPrice.toLocaleString('ru-RU')} ₽
+
+📋 Номер билета: <code>${ticket.id}</code>
+
+Менеджер свяжется с вами для согласования времени. Мы уведомим вас, когда группа соберётся! 🌊
+        `.trim(),
+        parse_mode: 'HTML'
+      })
+    }
 
     return {
       success: true,

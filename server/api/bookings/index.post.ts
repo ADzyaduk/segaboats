@@ -1,5 +1,5 @@
 import { prisma } from '~~/server/utils/db'
-import { n8nEvents } from '~~/server/utils/n8n'
+import { notifyAdminNewBooking } from '~~/server/utils/notifications'
 import { sendBookingConfirmation } from '~~/server/utils/telegram'
 
 interface BookingBody {
@@ -165,29 +165,37 @@ export default defineEventHandler(async (event) => {
         boat: {
           select: {
             name: true,
-            thumbnail: true
+            thumbnail: true,
+            pier: true
+          }
+        },
+        user: {
+          select: {
+            telegramId: true
           }
         }
       }
     })
 
-    // Trigger n8n webhook
-    await n8nEvents.onBookingCreated({
-      bookingId: booking.id,
-      boatId: boat.id,
-      boatName: boat.name,
+    // Notify admin about new booking
+    await notifyAdminNewBooking({
+      id: booking.id,
+      boatName: booking.boat.name,
       customerName: body.customerName,
       customerPhone: body.customerPhone,
-      startDate: startDate.toISOString(),
+      startDate,
       hours: body.hours,
-      totalPrice
+      totalPrice,
+      passengers: body.passengers,
+      customerEmail: body.customerEmail || null,
+      customerNotes: body.customerNotes || null
     })
 
     // Send Telegram confirmation if user has telegram
     if (body.telegramUserId) {
       await sendBookingConfirmation(body.telegramUserId, {
         id: booking.id,
-        boatName: boat.name,
+        boatName: booking.boat.name,
         date: startDate.toLocaleDateString('ru-RU'),
         time: startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
         hours: body.hours,

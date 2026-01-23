@@ -1,7 +1,10 @@
 // Update booking status (Admin only)
 
 import { prisma } from '~~/server/utils/db'
-import { n8nEvents } from '~~/server/utils/n8n'
+import { 
+  notifyCustomerBookingConfirmed, 
+  notifyCustomerBookingCancelled 
+} from '~~/server/utils/notifications'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -47,23 +50,36 @@ export default defineEventHandler(async (event) => {
       data: updateData,
       include: {
         boat: {
-          select: { name: true }
+          select: { 
+            name: true,
+            pier: true
+          }
+        },
+        user: {
+          select: {
+            telegramId: true
+          }
         }
       }
     })
 
-    // Trigger n8n webhook
+    // Notify customer about status change
     if (body.status === 'CONFIRMED') {
-      await n8nEvents.onBookingConfirmed({
-        bookingId: updatedBooking.id,
+      await notifyCustomerBookingConfirmed({
+        id: updatedBooking.id,
         boatName: updatedBooking.boat.name,
-        customerName: updatedBooking.customerName
+        startDate: updatedBooking.startDate,
+        hours: updatedBooking.hours,
+        totalPrice: updatedBooking.totalPrice,
+        userTelegramId: updatedBooking.user.telegramId,
+        boatPier: updatedBooking.boat.pier
       })
     } else if (body.status === 'CANCELLED') {
-      await n8nEvents.onBookingCancelled({
-        bookingId: updatedBooking.id,
+      await notifyCustomerBookingCancelled({
+        id: updatedBooking.id,
         boatName: updatedBooking.boat.name,
-        customerName: updatedBooking.customerName
+        startDate: updatedBooking.startDate,
+        userTelegramId: updatedBooking.user.telegramId
       })
     }
 

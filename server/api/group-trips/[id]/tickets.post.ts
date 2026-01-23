@@ -1,7 +1,7 @@
 // Purchase group trip ticket
 
 import { prisma } from '~~/server/utils/db'
-import { n8nEvents } from '~~/server/utils/n8n'
+import { notifyAdminNewTicket } from '~~/server/utils/notifications'
 
 interface TicketBody {
   customerName: string
@@ -96,6 +96,7 @@ export default defineEventHandler(async (event) => {
       const newTicket = await tx.groupTripTicket.create({
         data: {
           tripId: trip.id,
+          serviceType: trip.type,
           userId: user.id,
           customerName: body.customerName,
           customerPhone: body.customerPhone,
@@ -110,6 +111,11 @@ export default defineEventHandler(async (event) => {
               duration: true,
               departureDate: true,
               departureTime: true
+            }
+          },
+          service: {
+            select: {
+              title: true
             }
           }
         }
@@ -128,17 +134,36 @@ export default defineEventHandler(async (event) => {
       return newTicket
     })
 
-    // Trigger n8n webhook for admin notification
-    await n8nEvents.onGroupTripTicketPurchased({
-      ticketId: ticket.id,
-      tripId: trip.id,
-      tripType: trip.type,
-      customerName: body.customerName,
-      customerPhone: body.customerPhone,
-      departureDate: trip.departureDate.toISOString(),
-      price: trip.price,
-      availableSeats: trip.availableSeats - 1 // After this ticket
+    // Notify admin about new ticket
+    await notifyAdminNewTicket({
+      id: ticket.id,
+      serviceTitle: ticket.service.title,
+      customerName: ticket.customerName,
+      customerPhone: ticket.customerPhone,
+      desiredDate: ticket.trip.departureDate,
+      totalPrice: ticket.totalPrice,
+      serviceType: ticket.trip.type
     })
+
+    // Send confirmation to customer if they have Telegram
+    if (body.telegramUserId) {
+      const { sendTelegramMessage } = await import('~~/server/utils/telegram')
+      await sendTelegramMessage({
+        chat_id: body.telegramUserId,
+        text: `
+🎫 <b>Билет заказан!</b>
+
+Услуга: ${ticket.service.title}
+📅 Дата: ${ticket.trip.departureDate.toLocaleDateString('ru-RU')}
+💰 Сумма: ${ticket.totalPrice.toLocaleString('ru-RU')} ₽
+
+📋 Номер билета: <code>${ticket.id}</code>
+
+Менеджер свяжется с вами для подтверждения. Мы уведомим вас о статусе! 🌊
+        `.trim(),
+        parse_mode: 'HTML'
+      })
+    }
 
     return {
       success: true,

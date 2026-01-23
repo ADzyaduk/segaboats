@@ -130,6 +130,167 @@ export async function sendTelegramMessage(message: TelegramMessage): Promise<boo
   }
 }
 
+// Send message and return message ID
+export async function sendTelegramMessageWithId(message: TelegramMessage): Promise<{ success: boolean; messageId?: number }> {
+  try {
+    const botToken = getBotToken()
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(message)
+    })
+
+    const result = await response.json()
+    
+    if (!result.ok) {
+      console.error('Telegram API error:', result)
+      return { success: false }
+    }
+
+    return { success: true, messageId: result.result.message_id }
+  } catch (error) {
+    console.error('Error sending Telegram message:', error)
+    return { success: false }
+  }
+}
+
+// Send admin notification with inline buttons
+export async function sendAdminNotification(
+  chatId: string | number,
+  text: string,
+  buttons?: { inline_keyboard: any[][] }
+): Promise<{ success: boolean; messageId?: number }> {
+  const message: TelegramMessage = {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML'
+  }
+
+  if (buttons) {
+    message.reply_markup = buttons
+  }
+
+  return sendTelegramMessageWithId(message)
+}
+
+// Format booking message for admin
+export function formatBookingMessage(data: {
+  type: 'new' | 'update'
+  bookingId: string
+  boatName: string
+  customerName: string
+  customerPhone: string
+  startDate: Date
+  hours: number
+  totalPrice: number
+  passengers: number
+  customerEmail?: string | null
+  customerNotes?: string | null
+  status?: string
+}): string {
+  const dateStr = data.startDate.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+  const timeStr = data.startDate.toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+
+  let message = ''
+  
+  if (data.type === 'new') {
+    message = `🆕 <b>Новое бронирование</b>\n\n`
+  } else {
+    message = `📝 <b>Бронирование обновлено</b>\n\n`
+  }
+
+  message += `🛥 <b>Яхта:</b> ${data.boatName}\n`
+  message += `👤 <b>Клиент:</b> ${data.customerName}\n`
+  message += `📞 <b>Телефон:</b> ${data.customerPhone}\n`
+  if (data.customerEmail) {
+    message += `📧 <b>Email:</b> ${data.customerEmail}\n`
+  }
+  message += `📅 <b>Дата:</b> ${dateStr}\n`
+  message += `🕐 <b>Время:</b> ${timeStr}\n`
+  message += `⏱ <b>Продолжительность:</b> ${data.hours} ч.\n`
+  message += `👥 <b>Пассажиров:</b> ${data.passengers}\n`
+  message += `💰 <b>Сумма:</b> ${data.totalPrice.toLocaleString('ru-RU')} ₽\n`
+  
+  if (data.status) {
+    const statusEmoji = {
+      'PENDING': '⏳',
+      'CONFIRMED': '✅',
+      'PAID': '💳',
+      'CANCELLED': '❌',
+      'COMPLETED': '✔️'
+    }
+    message += `\n📊 <b>Статус:</b> ${statusEmoji[data.status as keyof typeof statusEmoji] || ''} ${data.status}\n`
+  }
+
+  if (data.customerNotes) {
+    message += `\n📝 <b>Примечания:</b> ${data.customerNotes}\n`
+  }
+
+  message += `\n📋 <b>ID:</b> <code>${data.bookingId}</code>`
+
+  return message
+}
+
+// Format ticket message for admin
+export function formatTicketMessage(data: {
+  type: 'new' | 'update'
+  ticketId: string
+  serviceTitle: string
+  customerName: string
+  customerPhone: string
+  desiredDate?: Date | null
+  totalPrice: number
+  serviceType: string
+  status?: string
+}): string {
+  let message = ''
+  
+  if (data.type === 'new') {
+    message = `🎫 <b>Новый билет</b>\n\n`
+  } else {
+    message = `📝 <b>Билет обновлён</b>\n\n`
+  }
+
+  message += `🎯 <b>Услуга:</b> ${data.serviceTitle}\n`
+  message += `👤 <b>Клиент:</b> ${data.customerName}\n`
+  message += `📞 <b>Телефон:</b> ${data.customerPhone}\n`
+  
+  if (data.desiredDate) {
+    const dateStr = data.desiredDate.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    })
+    message += `📅 <b>Желаемая дата:</b> ${dateStr}\n`
+  }
+  
+  message += `💰 <b>Сумма:</b> ${data.totalPrice.toLocaleString('ru-RU')} ₽\n`
+  
+  if (data.status) {
+    const statusEmoji = {
+      'PENDING': '⏳',
+      'CONFIRMED': '✅',
+      'CANCELLED': '❌'
+    }
+    message += `\n📊 <b>Статус:</b> ${statusEmoji[data.status as keyof typeof statusEmoji] || ''} ${data.status}\n`
+  }
+
+  message += `\n📋 <b>ID:</b> <code>${data.ticketId}</code>`
+
+  return message
+}
+
 // Send booking confirmation
 export async function sendBookingConfirmation(
   chatId: number | string,

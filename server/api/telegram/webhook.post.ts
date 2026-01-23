@@ -4,9 +4,15 @@ import {
   sendTelegramMessage, 
   editTelegramMessage, 
   answerCallbackQuery,
-  sendBookingConfirmedNotification,
-  sendBookingCancelledNotification
+  formatBookingMessage
 } from '~~/server/utils/telegram'
+import {
+  notifyCustomerBookingConfirmed,
+  notifyCustomerBookingCancelled,
+  notifyCustomerTicketConfirmed,
+  notifyCustomerTicketCancelled,
+  notifyCustomerAfterLinking
+} from '~~/server/utils/notifications'
 
 interface TelegramUpdate {
   update_id: number
@@ -127,16 +133,12 @@ export default defineEventHandler(async (event) => {
                 }
               })
 
-              await sendTelegramMessage({
-                chat_id: chatId,
-                text: `✅ <b>Уведомления подключены!</b>\n\n` +
-                  `Теперь вы будете получать уведомления о вашем бронировании:\n\n` +
-                  `🛥 Яхта: ${booking.boat.name}\n` +
-                  `📅 Дата: ${booking.startDate.toLocaleDateString('ru-RU')}\n` +
-                  `🕐 Время: ${booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}\n` +
-                  `💰 Сумма: ${booking.totalPrice.toLocaleString('ru-RU')} ₽\n\n` +
-                  `Мы уведомим вас о подтверждении и напомним перед прогулкой! 🌊`,
-                parse_mode: 'HTML'
+              // Send notification about current status
+              await notifyCustomerAfterLinking({
+                type: 'booking',
+                id: booking.id,
+                status: booking.status,
+                userTelegramId: String(user.id)
               })
 
               return { ok: true }
@@ -180,14 +182,12 @@ export default defineEventHandler(async (event) => {
                 }
               })
 
-              await sendTelegramMessage({
-                chat_id: chatId,
-                text: `✅ <b>Уведомления подключены!</b>\n\n` +
-                  `Теперь вы будете получать уведомления о вашем билете:\n\n` +
-                  `🎫 ${ticket.service.title}\n` +
-                  `💰 Сумма: ${ticket.totalPrice.toLocaleString('ru-RU')} ₽\n\n` +
-                  `Мы уведомим вас, когда группа соберётся и о времени отправления! 🌊`,
-                parse_mode: 'HTML'
+              // Send notification about current status
+              await notifyCustomerAfterLinking({
+                type: 'ticket',
+                id: ticket.id,
+                status: ticket.status,
+                userTelegramId: String(user.id)
               })
 
               return { ok: true }
@@ -526,8 +526,8 @@ export default defineEventHandler(async (event) => {
       const isAdmin = String(callback_query.from.id) === adminChatId
 
       // Handle booking confirmation (admin only)
-      if (data?.startsWith('confirm_') && isAdmin) {
-        const bookingId = data.replace('confirm_', '')
+      if (data?.startsWith('confirm_booking_') && isAdmin) {
+        const bookingId = data.replace('confirm_booking_', '')
         
         try {
           const booking = await prisma.booking.findUnique({
@@ -557,11 +557,15 @@ export default defineEventHandler(async (event) => {
           }
 
           // Update booking status
-          await prisma.booking.update({
+          const updatedBooking = await prisma.booking.update({
             where: { id: bookingId },
             data: { 
               status: 'CONFIRMED',
               confirmedAt: new Date()
+            },
+            include: {
+              boat: { select: { name: true, pier: true } },
+              user: { select: { telegramId: true } }
             }
           })
 
@@ -573,41 +577,38 @@ export default defineEventHandler(async (event) => {
 
           // Update admin message
           if (callback_query.message) {
-            const date = booking.startDate.toLocaleDateString('ru-RU')
-            const time = booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            const formattedMessage = formatBookingMessage({
+              type: 'update',
+              bookingId: updatedBooking.id,
+              boatName: updatedBooking.boat.name,
+              customerName: updatedBooking.customerName,
+              customerPhone: updatedBooking.customerPhone,
+              startDate: updatedBooking.startDate,
+              hours: updatedBooking.hours,
+              totalPrice: updatedBooking.totalPrice,
+              passengers: updatedBooking.passengers,
+              status: 'CONFIRMED'
+            })
             
             await editTelegramMessage({
               chat_id: callback_query.message.chat.id,
               message_id: callback_query.message.message_id,
-              text: `✅ <b>Бронирование подтверждено!</b>\n\n` +
-                `📋 Детали:\n` +
-                `• ID: ${bookingId}\n` +
-                `• Клиент: ${booking.customerName}\n` +
-                `• Телефон: ${booking.customerPhone}\n` +
-                `• Яхта: ${booking.boat.name}\n` +
-                `• Дата: ${date} в ${time}\n` +
-                `• Часов: ${booking.hours}\n` +
-                `• Стоимость: ${booking.totalPrice.toLocaleString('ru-RU')} руб.\n\n` +
-                `✅ Подтверждено: ${new Date().toLocaleString('ru-RU')}`,
-              parse_mode: 'HTML'
+              text: formattedMessage,
+              parse_mode: 'HTML',
+              reply_markup: undefined // Remove buttons
             })
           }
 
-          // Notify customer if they have Telegram connected
-          if (booking.user.telegramId && !booking.user.telegramId.startsWith('temp_')) {
-            const date = booking.startDate.toLocaleDateString('ru-RU')
-            const time = booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-            
-            await sendBookingConfirmedNotification(booking.user.telegramId, {
-              id: booking.id,
-              boatName: booking.boat.name,
-              date,
-              time,
-              hours: booking.hours,
-              totalPrice: booking.totalPrice,
-              pier: booking.boat.pier || undefined
-            })
-          }
+          // Notify customer
+          await notifyCustomerBookingConfirmed({
+            id: updatedBooking.id,
+            boatName: updatedBooking.boat.name,
+            startDate: updatedBooking.startDate,
+            hours: updatedBooking.hours,
+            totalPrice: updatedBooking.totalPrice,
+            userTelegramId: updatedBooking.user.telegramId,
+            boatPier: updatedBooking.boat.pier
+          })
 
           return { ok: true }
         } catch (error) {
@@ -621,8 +622,8 @@ export default defineEventHandler(async (event) => {
       }
 
       // Handle booking cancellation (admin only)
-      if (data?.startsWith('cancel_') && isAdmin) {
-        const bookingId = data.replace('cancel_', '')
+      if (data?.startsWith('cancel_booking_') && isAdmin) {
+        const bookingId = data.replace('cancel_booking_', '')
         
         try {
           const booking = await prisma.booking.findUnique({
@@ -652,11 +653,15 @@ export default defineEventHandler(async (event) => {
           }
 
           // Update booking status
-          await prisma.booking.update({
+          const updatedBooking = await prisma.booking.update({
             where: { id: bookingId },
             data: { 
               status: 'CANCELLED',
               cancelledAt: new Date()
+            },
+            include: {
+              boat: { select: { name: true } },
+              user: { select: { telegramId: true } }
             }
           })
 
@@ -668,42 +673,227 @@ export default defineEventHandler(async (event) => {
 
           // Update admin message
           if (callback_query.message) {
-            const date = booking.startDate.toLocaleDateString('ru-RU')
-            const time = booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            const formattedMessage = formatBookingMessage({
+              type: 'update',
+              bookingId: updatedBooking.id,
+              boatName: updatedBooking.boat.name,
+              customerName: updatedBooking.customerName,
+              customerPhone: updatedBooking.customerPhone,
+              startDate: updatedBooking.startDate,
+              hours: updatedBooking.hours,
+              totalPrice: updatedBooking.totalPrice,
+              passengers: updatedBooking.passengers,
+              status: 'CANCELLED'
+            })
             
             await editTelegramMessage({
               chat_id: callback_query.message.chat.id,
               message_id: callback_query.message.message_id,
-              text: `❌ <b>Бронирование отменено</b>\n\n` +
-                `📋 Детали:\n` +
-                `• ID: ${bookingId}\n` +
-                `• Клиент: ${booking.customerName}\n` +
-                `• Телефон: ${booking.customerPhone}\n` +
-                `• Яхта: ${booking.boat.name}\n` +
-                `• Дата: ${date} в ${time}\n` +
-                `• Часов: ${booking.hours}\n` +
-                `• Стоимость: ${booking.totalPrice.toLocaleString('ru-RU')} руб.\n\n` +
-                `❌ Отменено: ${new Date().toLocaleString('ru-RU')}`,
-              parse_mode: 'HTML'
+              text: formattedMessage,
+              parse_mode: 'HTML',
+              reply_markup: undefined // Remove buttons
             })
           }
 
-          // Notify customer if they have Telegram connected
-          if (booking.user.telegramId && !booking.user.telegramId.startsWith('temp_')) {
-            const date = booking.startDate.toLocaleDateString('ru-RU')
-            const time = booking.startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-            
-            await sendBookingCancelledNotification(booking.user.telegramId, {
-              id: booking.id,
-              boatName: booking.boat.name,
-              date,
-              time
-            })
-          }
+          // Notify customer
+          await notifyCustomerBookingCancelled({
+            id: updatedBooking.id,
+            boatName: updatedBooking.boat.name,
+            startDate: updatedBooking.startDate,
+            userTelegramId: updatedBooking.user.telegramId
+          })
 
           return { ok: true }
         } catch (error) {
           console.error('Error cancelling booking:', error)
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Ошибка при отмене',
+            show_alert: true
+          })
+        }
+      }
+
+      // Handle ticket confirmation (admin only)
+      if (data?.startsWith('confirm_ticket_') && isAdmin) {
+        const ticketId = data.replace('confirm_ticket_', '')
+        
+        try {
+          const ticket = await prisma.groupTripTicket.findUnique({
+            where: { id: ticketId },
+            include: {
+              service: { select: { title: true } },
+              trip: { select: { departureDate: true } },
+              user: { select: { telegramId: true } }
+            }
+          })
+
+          if (!ticket) {
+            await answerCallbackQuery({
+              callback_query_id: callback_query.id,
+              text: 'Билет не найден',
+              show_alert: true
+            })
+            return { ok: true }
+          }
+
+          if (ticket.status !== 'PENDING') {
+            await answerCallbackQuery({
+              callback_query_id: callback_query.id,
+              text: `Билет уже имеет статус: ${ticket.status}`,
+              show_alert: true
+            })
+            return { ok: true }
+          }
+
+          // Update ticket status
+          const updatedTicket = await prisma.groupTripTicket.update({
+            where: { id: ticketId },
+            data: { 
+              status: 'CONFIRMED',
+              confirmedAt: new Date()
+            },
+            include: {
+              service: { select: { title: true } },
+              trip: { select: { departureDate: true } },
+              user: { select: { telegramId: true } }
+            }
+          })
+
+          // Answer callback
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Билет подтверждён!'
+          })
+
+          // Update admin message
+          if (callback_query.message) {
+            const { formatTicketMessage } = await import('~~/server/utils/telegram')
+            const formattedMessage = formatTicketMessage({
+              type: 'update',
+              ticketId: updatedTicket.id,
+              serviceTitle: updatedTicket.service.title,
+              customerName: updatedTicket.customerName,
+              customerPhone: updatedTicket.customerPhone,
+              desiredDate: updatedTicket.desiredDate,
+              totalPrice: updatedTicket.totalPrice,
+              serviceType: updatedTicket.serviceType,
+              status: 'CONFIRMED'
+            })
+            
+            await editTelegramMessage({
+              chat_id: callback_query.message.chat.id,
+              message_id: callback_query.message.message_id,
+              text: formattedMessage,
+              parse_mode: 'HTML',
+              reply_markup: undefined // Remove buttons
+            })
+          }
+
+          // Notify customer
+          await notifyCustomerTicketConfirmed({
+            id: updatedTicket.id,
+            serviceTitle: updatedTicket.service.title,
+            totalPrice: updatedTicket.totalPrice,
+            tripDate: updatedTicket.trip?.departureDate || null,
+            userTelegramId: updatedTicket.user.telegramId
+          })
+
+          return { ok: true }
+        } catch (error) {
+          console.error('Error confirming ticket:', error)
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Ошибка при подтверждении',
+            show_alert: true
+          })
+        }
+      }
+
+      // Handle ticket cancellation (admin only)
+      if (data?.startsWith('cancel_ticket_') && isAdmin) {
+        const ticketId = data.replace('cancel_ticket_', '')
+        
+        try {
+          const ticket = await prisma.groupTripTicket.findUnique({
+            where: { id: ticketId },
+            include: {
+              service: { select: { title: true } },
+              user: { select: { telegramId: true } }
+            }
+          })
+
+          if (!ticket) {
+            await answerCallbackQuery({
+              callback_query_id: callback_query.id,
+              text: 'Билет не найден',
+              show_alert: true
+            })
+            return { ok: true }
+          }
+
+          if (ticket.status === 'CANCELLED') {
+            await answerCallbackQuery({
+              callback_query_id: callback_query.id,
+              text: 'Билет уже отменён',
+              show_alert: true
+            })
+            return { ok: true }
+          }
+
+          // Update ticket status
+          const updatedTicket = await prisma.groupTripTicket.update({
+            where: { id: ticketId },
+            data: { 
+              status: 'CANCELLED',
+              cancelledAt: new Date()
+            },
+            include: {
+              service: { select: { title: true } },
+              user: { select: { telegramId: true } }
+            }
+          })
+
+          // Answer callback
+          await answerCallbackQuery({
+            callback_query_id: callback_query.id,
+            text: 'Билет отменён'
+          })
+
+          // Update admin message
+          if (callback_query.message) {
+            const { formatTicketMessage } = await import('~~/server/utils/telegram')
+            const formattedMessage = formatTicketMessage({
+              type: 'update',
+              ticketId: updatedTicket.id,
+              serviceTitle: updatedTicket.service.title,
+              customerName: updatedTicket.customerName,
+              customerPhone: updatedTicket.customerPhone,
+              desiredDate: updatedTicket.desiredDate,
+              totalPrice: updatedTicket.totalPrice,
+              serviceType: updatedTicket.serviceType,
+              status: 'CANCELLED'
+            })
+            
+            await editTelegramMessage({
+              chat_id: callback_query.message.chat.id,
+              message_id: callback_query.message.message_id,
+              text: formattedMessage,
+              parse_mode: 'HTML',
+              reply_markup: undefined // Remove buttons
+            })
+          }
+
+          // Notify customer
+          await notifyCustomerTicketCancelled({
+            id: updatedTicket.id,
+            serviceTitle: updatedTicket.service.title,
+            userTelegramId: updatedTicket.user.telegramId
+          })
+
+          return { ok: true }
+        } catch (error) {
+          console.error('Error cancelling ticket:', error)
           await answerCallbackQuery({
             callback_query_id: callback_query.id,
             text: 'Ошибка при отмене',

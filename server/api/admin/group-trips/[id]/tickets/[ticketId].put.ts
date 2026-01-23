@@ -1,7 +1,10 @@
 // Update group trip ticket status (Admin only)
 
 import { prisma } from '~~/server/utils/db'
-import { n8nEvents } from '~~/server/utils/n8n'
+import { 
+  notifyCustomerTicketConfirmed, 
+  notifyCustomerTicketCancelled 
+} from '~~/server/utils/notifications'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -23,7 +26,18 @@ export default defineEventHandler(async (event) => {
           select: {
             id: true,
             type: true,
-            availableSeats: true
+            availableSeats: true,
+            departureDate: true
+          }
+        },
+        service: {
+          select: {
+            title: true
+          }
+        },
+        user: {
+          select: {
+            telegramId: true
           }
         }
       }
@@ -74,13 +88,13 @@ export default defineEventHandler(async (event) => {
           })
         }
         
-        // Trigger n8n webhook
-        await n8nEvents.onGroupTripTicketConfirmed({
-          ticketId: ticket.id,
-          tripId: tripId,
-          customerName: ticket.customerName,
-          customerPhone: ticket.customerPhone,
-          price: ticket.totalPrice
+        // Notify customer about ticket confirmation
+        await notifyCustomerTicketConfirmed({
+          id: ticket.id,
+          serviceTitle: ticket.service.title,
+          totalPrice: ticket.totalPrice,
+          tripDate: ticket.trip?.departureDate || null,
+          userTelegramId: ticket.user.telegramId
         })
       } else if (body.status === 'CANCELLED' && ticket.status !== 'CANCELLED') {
         updateData.cancelledAt = new Date()
@@ -98,12 +112,11 @@ export default defineEventHandler(async (event) => {
           })
         }
         
-        // Trigger n8n webhook
-        await n8nEvents.onGroupTripTicketCancelled({
-          ticketId: ticket.id,
-          tripId: tripId,
-          customerName: ticket.customerName,
-          customerPhone: ticket.customerPhone
+        // Notify customer about ticket cancellation
+        await notifyCustomerTicketCancelled({
+          id: ticket.id,
+          serviceTitle: ticket.service.title,
+          userTelegramId: ticket.user.telegramId
         })
       }
     }
@@ -116,6 +129,11 @@ export default defineEventHandler(async (event) => {
           select: {
             type: true,
             departureDate: true
+          }
+        },
+        service: {
+          select: {
+            title: true
           }
         }
       }
