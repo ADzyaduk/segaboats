@@ -86,9 +86,12 @@ export async function notifyAdminNewBooking(booking: {
     const confirmCallback = `confirm_booking_${booking.id}`
     const cancelCallback = `cancel_booking_${booking.id}`
     
-    // Check callback_data length (Telegram limit: 64 bytes)
+    // Check callback_data length in BYTES (Telegram limit: 64 bytes, not characters!)
+    const confirmCallbackBytes = Buffer.byteLength(confirmCallback, 'utf8')
+    const cancelCallbackBytes = Buffer.byteLength(cancelCallback, 'utf8')
+    
     let buttons
-    if (confirmCallback.length > 64 || cancelCallback.length > 64) {
+    if (confirmCallbackBytes > 64 || cancelCallbackBytes > 64) {
       console.warn('[notifications] ⚠️ Callback data exceeds 64 bytes limit, using shorter format')
       const shortId = booking.id.slice(-20)
       buttons = {
@@ -184,8 +187,11 @@ export async function notifyAdminNewTicket(ticket: {
     const confirmCallback = `confirm_ticket_${ticket.id}`
     const cancelCallback = `cancel_ticket_${ticket.id}`
     
-    // Check callback_data length (Telegram limit: 64 bytes)
-    if (confirmCallback.length > 64 || cancelCallback.length > 64) {
+    // Check callback_data length in BYTES (Telegram limit: 64 bytes, not characters!)
+    const confirmCallbackBytes = Buffer.byteLength(confirmCallback, 'utf8')
+    const cancelCallbackBytes = Buffer.byteLength(cancelCallback, 'utf8')
+    
+    if (confirmCallbackBytes > 64 || cancelCallbackBytes > 64) {
       console.warn('[notifications] ⚠️ Callback data exceeds 64 bytes limit, using shorter format')
       // Use shorter format if needed (last 20 chars of ticket ID)
       const shortId = ticket.id.slice(-20)

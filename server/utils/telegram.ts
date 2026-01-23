@@ -246,21 +246,34 @@ export async function sendAdminNotification(
   }
 
   if (buttons) {
-    // Ensure reply_markup is properly formatted as JSON object (not string)
-    // Telegram API expects the object directly, not a JSON string
-    message.reply_markup = buttons
-    console.log('[telegram] Reply markup:', JSON.stringify(buttons, null, 2))
-    
-    // Validate callback_data lengths (max 64 bytes)
+    // Validate and fix callback_data lengths (max 64 bytes) BEFORE assigning
     if (buttons.inline_keyboard) {
       for (const row of buttons.inline_keyboard) {
         for (const button of row) {
-          if (button.callback_data && button.callback_data.length > 64) {
-            console.error('[telegram] ❌ Callback data exceeds 64 bytes:', button.callback_data, 'Length:', button.callback_data.length)
+          if (button.callback_data) {
+            const callbackLength = Buffer.byteLength(button.callback_data, 'utf8')
+            if (callbackLength > 64) {
+              console.error('[telegram] ❌ Callback data exceeds 64 bytes:', button.callback_data, 'Length (bytes):', callbackLength)
+              // Truncate or use shorter format
+              const shortId = button.callback_data.match(/([a-z0-9]{20})$/)?.[1] || button.callback_data.slice(-20)
+              if (button.callback_data.startsWith('confirm_')) {
+                button.callback_data = `cfm_${shortId}`
+              } else if (button.callback_data.startsWith('cancel_')) {
+                button.callback_data = `cnl_${shortId}`
+              } else {
+                button.callback_data = button.callback_data.slice(-60) // Keep last 60 bytes
+              }
+              console.warn('[telegram] ⚠️ Shortened callback_data to:', button.callback_data)
+            }
           }
         }
       }
     }
+    
+    // Ensure reply_markup is properly formatted as JSON object (not string)
+    // Telegram API expects the object directly, not a JSON string
+    message.reply_markup = buttons
+    console.log('[telegram] Reply markup:', JSON.stringify(buttons, null, 2))
   }
 
   console.log('[telegram] Final message before sending:', {
