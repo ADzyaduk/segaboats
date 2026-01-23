@@ -99,9 +99,6 @@ export async function notifyAdminNewBooking(booking: {
           [
             { text: '✅ Подтвердить', callback_data: `cfm_book_${shortId}` },
             { text: '❌ Отклонить', callback_data: `cnl_book_${shortId}` }
-          ],
-          [
-            { text: '📞 Позвонить', url: `tel:${booking.customerPhone.replace(/[^\d+]/g, '')}` }
           ]
         ]
       }
@@ -111,9 +108,6 @@ export async function notifyAdminNewBooking(booking: {
           [
             { text: '✅ Подтвердить', callback_data: confirmCallback },
             { text: '❌ Отклонить', callback_data: cancelCallback }
-          ],
-          [
-            { text: '📞 Позвонить', url: `tel:${booking.customerPhone.replace(/[^\d+]/g, '')}` }
           ]
         ]
       }
@@ -195,22 +189,13 @@ export async function notifyAdminNewTicket(ticket: {
       console.warn('[notifications] ⚠️ Callback data exceeds 64 bytes limit, using shorter format')
       // Use shorter format if needed (last 20 chars of ticket ID)
       const shortId = ticket.id.slice(-20)
-      // Clean phone number for tel: URL (remove all non-digit characters except +)
-      const cleanPhone = ticket.customerPhone.replace(/[^\d+]/g, '')
-      console.log('[notifications] Phone number cleanup (short callback):', {
-        original: ticket.customerPhone,
-        cleaned: cleanPhone,
-        telUrl: `tel:${cleanPhone}`
-      })
-      
+      // Note: Telegram Bot API doesn't support tel: URLs in inline keyboard buttons
+      // Phone number is included in the message text, admin can copy it from there
       const buttons = {
         inline_keyboard: [
           [
             { text: '✅ Подтвердить', callback_data: `cfm_${shortId}` },
             { text: '❌ Отклонить', callback_data: `cnl_${shortId}` }
-          ],
-          [
-            { text: '📞 Позвонить', url: `tel:${cleanPhone}` }
           ]
         ]
       }
@@ -233,22 +218,13 @@ export async function notifyAdminNewTicket(ticket: {
       return result
     }
     
-    // Clean phone number for tel: URL (remove all non-digit characters except +)
-    const cleanPhone = ticket.customerPhone.replace(/[^\d+]/g, '')
-    console.log('[notifications] Phone number cleanup:', {
-      original: ticket.customerPhone,
-      cleaned: cleanPhone,
-      telUrl: `tel:${cleanPhone}`
-    })
-    
+    // Note: Telegram Bot API doesn't support tel: URLs in inline keyboard buttons
+    // Phone number is included in the message text, admin can copy it from there
     const buttons = {
       inline_keyboard: [
         [
           { text: '✅ Подтвердить', callback_data: confirmCallback },
           { text: '❌ Отклонить', callback_data: cancelCallback }
-        ],
-        [
-          { text: '📞 Позвонить', url: `tel:${cleanPhone}` }
         ]
       ]
     }
