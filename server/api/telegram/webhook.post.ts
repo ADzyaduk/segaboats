@@ -858,6 +858,7 @@ export default defineEventHandler(async (event) => {
             show_alert: true
           })
         }
+        return { ok: true }
       } else if (data?.startsWith('confirm_ticket_') || data?.startsWith('cfm_')) {
         // Callback received but user is not admin
         console.warn('[webhook] Non-admin user tried to confirm ticket:', {
@@ -870,6 +871,7 @@ export default defineEventHandler(async (event) => {
           text: 'Только администратор может подтверждать билеты',
           show_alert: true
         })
+        return { ok: true }
       }
 
       // Handle ticket cancellation (admin only)
@@ -1006,6 +1008,7 @@ export default defineEventHandler(async (event) => {
             show_alert: true
           })
         }
+        return { ok: true }
       } else if (data?.startsWith('cancel_ticket_') || data?.startsWith('cnl_')) {
         // Callback received but user is not admin
         console.warn('[webhook] Non-admin user tried to cancel ticket:', {
@@ -1018,6 +1021,7 @@ export default defineEventHandler(async (event) => {
           text: 'Только администратор может отменять билеты',
           show_alert: true
         })
+        return { ok: true }
       }
 
       if (data === 'contact') {
