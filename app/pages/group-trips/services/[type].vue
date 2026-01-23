@@ -121,6 +121,7 @@ const handlePurchase = async () => {
     } else {
       throw new Error(response.error || 'Не удалось заказать билеты')
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     toast.error('Ошибка', error?.data?.message || 'Не удалось заказать билеты')
   } finally {
@@ -429,7 +430,7 @@ useSeoMeta({
     <USlideover
       v-model:open="showBookingSlideover"
       side="bottom"
-      :ui="{ container: 'max-w-lg max-h-[85vh]' }"
+      :ui="{ content: 'max-w-lg max-h-[85vh]' }"
       title="Оформление билета"
       description="Заполните форму для покупки билета на групповую поездку."
     >

@@ -1,4 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
 

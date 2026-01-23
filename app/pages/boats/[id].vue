@@ -570,7 +570,7 @@ onUnmounted(() => {
     <USlideover
       v-model:open="showBookingSlideover"
       side="bottom"
-      :ui="{ container: 'max-w-lg max-h-[85vh]' }"
+      :ui="{ content: 'max-w-lg max-h-[85vh]' }"
       title="Оформление бронирования"
       description="Заполните форму, и мы свяжемся с вами для подтверждения."
     >

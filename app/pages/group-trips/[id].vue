@@ -136,6 +136,7 @@ const handlePurchase = async () => {
       showBookingSlideover.value = false
       await navigateTo(`/my-tickets/${ticket.id}`)
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     toast.error('Ошибка', error?.data?.message || 'Не удалось заказать билеты')
   } finally {
@@ -233,8 +234,7 @@ useSeoMeta({
             v-if="trip.boat?.thumbnail"
             :src="trip.boat.thumbnail"
             :alt="trip.boat.name"
-            class="w-full h-full object-cover"
-          />
+            class="w-full h-full object-cover">
           <div v-else class="w-full h-full flex items-center justify-center text-8xl bg-linear-to-br from-blue-100 to-cyan-100 dark:from-blue-900 dark:to-cyan-900">
             🛥️
           </div>
@@ -305,7 +305,7 @@ useSeoMeta({
                   </div>
                 </div>
 
-                <hr class="my-4 border-gray-200 dark:border-gray-700" />
+                <hr class="my-4 border-gray-200 dark:border-gray-700">
 
                 <!-- Ticket Selection -->
                 <div class="space-y-3">
@@ -404,7 +404,7 @@ useSeoMeta({
                   </div>
                 </div>
 
-                <hr class="my-4 border-gray-200 dark:border-gray-700" />
+                <hr class="my-4 border-gray-200 dark:border-gray-700">
 
                 <div class="space-y-2 text-sm">
                   <div class="flex justify-between">
@@ -454,7 +454,7 @@ useSeoMeta({
     <USlideover
       v-model:open="showBookingSlideover"
       side="bottom"
-      :ui="{ container: 'max-w-lg max-h-[85vh]' }"
+      :ui="{ content: 'max-w-lg max-h-[85vh]' }"
       title="Оформление билета"
       description="Заполните форму для покупки билета на групповую поездку."
     >
@@ -462,7 +462,7 @@ useSeoMeta({
       <template #body>
         <div class="space-y-4">
           <!-- Summary -->
-          <UCard variant="subtle" v-if="trip">
+          <UCard v-if="trip" variant="subtle">
             <div class="text-center">
               <h4 class="font-semibold mb-2">{{ getTripTypeLabel(trip.type) }}</h4>
               <p class="text-sm text-gray-500 mb-2">
@@ -586,7 +586,7 @@ useSeoMeta({
           </div>
           </div>
 
-          <hr class="my-6 border-2 border-gray-300 dark:border-gray-600" />
+          <hr class="my-6 border-2 border-gray-300 dark:border-gray-600">
 
           <!-- Customer Info Section -->
           <div>
@@ -622,9 +622,9 @@ useSeoMeta({
               required
               autocomplete="tel"
               :color="phoneError ? 'error' : 'primary'"
+              class="w-full"
               @input="onPhoneInput"
               @blur="onPhoneBlur"
-              class="w-full"
             />
             <p v-if="phoneError" class="text-xs text-error-500 mt-1">
               {{ phoneError }}

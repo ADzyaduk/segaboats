@@ -396,7 +396,7 @@ useSeoMeta({
       <USlideover
         v-model:open="showCreateModal"
         side="bottom"
-        :ui="{ container: 'max-w-lg max-h-[85vh]' }"
+        :ui="{ content: 'max-w-lg max-h-[85vh]' }"
         title="Добавить яхту"
         description="Заполните форму для добавления новой яхты в каталог"
       >
@@ -420,7 +420,7 @@ useSeoMeta({
       <USlideover
         v-model:open="showEditModal"
         side="bottom"
-        :ui="{ container: 'max-w-lg max-h-[85vh]' }"
+        :ui="{ content: 'max-w-lg max-h-[85vh]' }"
         title="Редактировать яхту"
         description="Внесите изменения в данные яхты"
       >

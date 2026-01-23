@@ -170,8 +170,9 @@ export async function sendTelegramMessageWithId(message: TelegramMessage): Promi
     
     const url = `https://api.telegram.org/bot${botToken}/sendMessage`
     
-    console.log('[telegram] 📤 Sending message to chat:', message.chat_id)
+    console.log('[telegram] 📤 Sending message to chat:', message.chat_id, 'Type:', typeof message.chat_id)
     console.log('[telegram] Message preview:', message.text.substring(0, 100) + '...')
+    console.log('[telegram] Full message body:', JSON.stringify(message, null, 2))
 
     const response = await fetch(url, {
       method: 'POST',
@@ -184,17 +185,15 @@ export async function sendTelegramMessageWithId(message: TelegramMessage): Promi
     const result = await response.json()
     
     if (!result.ok) {
-      console.error('[telegram] ❌ Telegram API error:', {
-        ok: result.ok,
-        error_code: result.error_code,
-        description: result.description,
-        parameters: result.parameters,
-        full_response: JSON.stringify(result, null, 2)
-      })
+      console.error('[telegram] ❌ Telegram API error - FULL RESPONSE:', JSON.stringify(result, null, 2))
+      console.error('[telegram] ❌ Error code:', result.error_code)
+      console.error('[telegram] ❌ Error description:', result.description)
       console.error('[telegram] ❌ Message that failed:', {
         chat_id: message.chat_id,
+        chat_id_type: typeof message.chat_id,
         text_length: message.text?.length,
         has_buttons: !!message.reply_markup,
+        reply_markup: message.reply_markup ? JSON.stringify(message.reply_markup, null, 2) : 'none',
         parse_mode: message.parse_mode
       })
       return { success: false }
@@ -218,15 +217,31 @@ export async function sendAdminNotification(
   text: string,
   buttons?: { inline_keyboard: any[][] }
 ): Promise<{ success: boolean; messageId?: number }> {
+  // Convert chat_id to number if it's a numeric string (Telegram API prefers numbers for user IDs)
+  let finalChatId: string | number = chatId
+  if (typeof chatId === 'string' && /^\d+$/.test(chatId.trim())) {
+    finalChatId = Number(chatId.trim())
+    console.log('[telegram] Converted chat_id from string to number:', chatId, '->', finalChatId)
+  }
+
   const message: TelegramMessage = {
-    chat_id: chatId,
+    chat_id: finalChatId,
     text,
     parse_mode: 'HTML'
   }
 
   if (buttons) {
     message.reply_markup = buttons
+    console.log('[telegram] Reply markup:', JSON.stringify(buttons, null, 2))
   }
+
+  console.log('[telegram] Final message before sending:', {
+    chat_id: message.chat_id,
+    chat_id_type: typeof message.chat_id,
+    text_length: message.text.length,
+    has_reply_markup: !!message.reply_markup,
+    reply_markup_type: message.reply_markup ? typeof message.reply_markup : 'none'
+  })
 
   return sendTelegramMessageWithId(message)
 }
