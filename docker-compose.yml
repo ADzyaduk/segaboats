@@ -43,7 +43,7 @@ services:
       TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
       # Other variables
-      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-https://dequadomiror.beget.app/webhook}
+      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-https://n8n.v-more.ru/webhook}
       N8N_API_KEY: ${N8N_API_KEY}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin2026}
       NODE_ENV: production
@@ -67,12 +67,11 @@ services:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
       - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-admin2026}
-      - N8N_PATH=/n8n/
-      - N8N_HOST=${N8N_HOST:-v-more.ru}
+      - N8N_HOST=${N8N_HOST:-n8n.v-more.ru}
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - N8N_SECURE_COOKIE=true
-      - WEBHOOK_URL=https://${N8N_HOST:-v-more.ru}/webhook/
+      - WEBHOOK_URL=https://n8n.v-more.ru
       - GENERIC_TIMEZONE=Europe/Moscow
       - TZ=Europe/Moscow
       # PostgreSQL access for n8n workflows
