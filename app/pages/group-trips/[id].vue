@@ -454,7 +454,8 @@ useSeoMeta({
     <USlideover
       v-model:open="showBookingSlideover"
       side="bottom"
-      :ui="{ content: 'max-w-lg max-h-[85vh]' }"
+      inset
+      :ui="{ content: 'max-w-lg mx-auto max-h-[85vh]' }"
       title="Оформление билета"
       description="Заполните форму для покупки билета на групповую поездку."
     >

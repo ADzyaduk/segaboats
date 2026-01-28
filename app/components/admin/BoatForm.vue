@@ -303,7 +303,14 @@ const removeFeature = (index: number) => {
           :key="idx"
           class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded"
         >
-          <img :src="img" alt="" class="w-16 h-12 object-cover rounded" />
+          <NuxtImg
+            :src="img"
+            alt=""
+            class="w-16 h-12 object-cover rounded"
+            width="64"
+            height="48"
+            loading="lazy"
+          />
           <UInput
             v-model="formData.images[idx]"
             type="text"
@@ -340,13 +347,16 @@ const removeFeature = (index: number) => {
           class="flex items-center gap-1"
         >
           {{ feature }}
-          <button
+          <UButton
             type="button"
+            variant="ghost"
+            size="2xs"
+            color="neutral"
+            class="ml-1 hover:text-error-500 px-1 py-0"
             @click="removeFeature(idx)"
-            class="ml-1 hover:text-error-500"
           >
             <UIcon name="i-heroicons-x-mark" class="w-3 h-3" />
-          </button>
+          </UButton>
         </UBadge>
       </div>
     </div>

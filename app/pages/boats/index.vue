@@ -26,10 +26,10 @@ await boatsStore.fetchBoats()
     <UContainer>
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 class="text-3xl md:text-4xl font-bold text-highlighted mb-2">
           Каталог яхт
         </h1>
-        <p class="text-gray-600 dark:text-gray-400">
+        <p class="text-muted">
           {{ boatsStore.pagination.total }} яхт доступно для аренды
         </p>
       </div>

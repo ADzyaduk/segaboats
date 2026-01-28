@@ -3,7 +3,7 @@
 useSeoMeta({
   title: 'Контакты',
   description: 'Свяжитесь с нами для бронирования яхты в Сочи. Телефон, email, адрес офиса.',
-  ogTitle: 'Контакты - Яхты Сочи',
+  ogTitle: 'Контакты - В Море!',
   ogDescription: 'Телефон: +7 (900) 123-45-67. Работаем круглосуточно.',
   ogImage: '/og-image.jpg',
   twitterCard: 'summary_large_image'
@@ -95,10 +95,10 @@ const submitForm = async () => {
     <UContainer>
       <!-- Header -->
       <div class="text-center mb-12">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-highlighted mb-4">
           Контакты
         </h1>
-        <p class="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+        <p class="text-muted text-lg max-w-2xl mx-auto">
           Свяжитесь с нами любым удобным способом. Мы всегда на связи!
         </p>
       </div>
@@ -114,21 +114,21 @@ const submitForm = async () => {
               class="hover:shadow-lg transition-shadow"
             >
               <div class="flex items-start gap-4">
-                <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center shrink-0">
-                  <UIcon :name="contact.icon" class="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center shrink-0">
+                  <UIcon :name="contact.icon" class="w-6 h-6 text-primary-600" />
                 </div>
                 <div>
-                  <h3 class="font-semibold text-gray-900 dark:text-white mb-1">
+                  <h3 class="font-semibold text-highlighted mb-1">
                     {{ contact.title }}
                   </h3>
                   <a
                     :href="contact.link"
                     target="_blank"
-                    class="text-primary-600 dark:text-primary-400 hover:underline font-medium"
+                    class="text-primary-600 hover:underline font-medium"
                   >
                     {{ contact.value }}
                   </a>
-                  <p class="text-gray-500 text-sm mt-1">
+                  <p class="text-dimmed text-sm mt-1">
                     {{ contact.description }}
                   </p>
                 </div>
@@ -149,20 +149,20 @@ const submitForm = async () => {
               <div
                 v-for="item in workingHours"
                 :key="item.day"
-                class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
+                class="flex justify-between items-center py-2 border-b border-default last:border-0"
               >
-                <span class="text-gray-600 dark:text-gray-400">{{ item.day }}</span>
-                <span class="font-medium text-gray-900 dark:text-white">{{ item.hours }}</span>
+                <span class="text-muted">{{ item.day }}</span>
+                <span class="font-medium text-highlighted">{{ item.hours }}</span>
               </div>
             </div>
           </UCard>
 
           <!-- Map Placeholder -->
           <UCard class="overflow-hidden">
-            <div class="aspect-video bg-linear-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 flex items-center justify-center rounded-lg">
+            <div class="aspect-video bg-elevated flex items-center justify-center rounded-lg">
               <div class="text-center">
                 <UIcon name="i-heroicons-map" class="w-16 h-16 text-primary-400 mb-4" />
-                <p class="text-gray-600 dark:text-gray-400">
+                <p class="text-muted">
                   Сочи, Морской порт<br />
                   Причалы №1-5
                 </p>
@@ -184,7 +184,7 @@ const submitForm = async () => {
           <UCard>
             <template #header>
               <h2 class="text-xl font-semibold">Напишите нам</h2>
-              <p class="text-gray-500 text-sm mt-1">
+              <p class="text-dimmed text-sm mt-1">
                 Оставьте заявку и мы перезвоним вам
               </p>
             </template>
@@ -245,13 +245,13 @@ const submitForm = async () => {
 
             <!-- Success State -->
             <div v-else class="text-center py-8">
-              <div class="w-16 h-16 mx-auto mb-4 bg-success-100 dark:bg-success-900/30 rounded-full flex items-center justify-center">
+              <div class="w-16 h-16 mx-auto mb-4 bg-success-100 rounded-full flex items-center justify-center">
                 <UIcon name="i-heroicons-check" class="w-8 h-8 text-success-600" />
               </div>
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 class="text-xl font-semibold text-highlighted mb-2">
                 Заявка отправлена!
               </h3>
-              <p class="text-gray-600 dark:text-gray-400 mb-4">
+              <p class="text-muted mb-4">
                 Мы свяжемся с вами в ближайшее время
               </p>
               <UButton @click="isSubmitted = false" variant="outline">

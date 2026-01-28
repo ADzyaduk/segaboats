@@ -248,7 +248,8 @@ useSeoMeta({
     <USlideover
       v-model:open="showBookingSlideover"
       side="bottom"
-      :ui="{ content: 'max-w-lg max-h-[85vh]' }"
+      inset
+      :ui="{ content: 'max-w-lg mx-auto max-h-[85vh]' }"
       title="Оформление билета"
       description="Заполните форму для покупки билета на групповую поездку."
     >
@@ -266,7 +267,7 @@ useSeoMeta({
                   format="webp"
                   quality="70"
                 />
-                <div v-else class="w-full h-full flex items-center justify-center text-2xl bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900 dark:to-cyan-900">
+                <div v-else class="w-full h-full flex items-center justify-center text-2xl bg-linear-to-br from-blue-100 to-cyan-100 dark:from-blue-900 dark:to-cyan-900">
                   <span v-if="selectedService.type === 'FISHING'">🎣</span>
                   <span v-else>⛵</span>
                 </div>

@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@iconify-json/heroicons": "^1.2.3",
+    "@iconify-json/lucide": "^1.2.87",
     "prisma": "^6.2.0",
     "tsx": "^4.21.0"
   }

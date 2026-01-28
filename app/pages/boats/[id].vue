@@ -303,31 +303,37 @@ onUnmounted(() => {
             </div>
             
             <!-- Navigation arrows for gallery -->
-            <button
+            <UButton
               v-if="allImages.length > 1 && selectedImageIndex > 0"
               class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-gray-900/90 rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              variant="ghost"
+              color="neutral"
               @click="selectedImageIndex--"
               aria-label="Предыдущее изображение"
               type="button"
             >
               <UIcon name="i-heroicons-chevron-left" class="w-6 h-6" />
-            </button>
-            <button
+            </UButton>
+            <UButton
               v-if="allImages.length > 1 && selectedImageIndex < allImages.length - 1"
               class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-gray-900/90 rounded-full p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              variant="ghost"
+              color="neutral"
               @click="selectedImageIndex++"
               aria-label="Следующее изображение"
               type="button"
             >
               <UIcon name="i-heroicons-chevron-right" class="w-6 h-6" />
-            </button>
+            </UButton>
           </div>
           <div v-if="allImages.length > 1" class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-            <button
+            <UButton
               v-for="(img, idx) in allImages"
               :key="idx"
-              class="w-24 h-16 rounded-lg overflow-hidden shrink-0 ring-2 transition-all hover:ring-primary-400"
+              class="w-24 h-16 rounded-lg overflow-hidden shrink-0 ring-2 transition-all hover:ring-primary-400 p-0"
               :class="idx === selectedImageIndex ? 'ring-primary-500 ring-4' : 'ring-gray-300 dark:ring-gray-600'"
+              variant="ghost"
+              color="neutral"
               @click="selectedImageIndex = idx"
               :aria-label="`Изображение ${idx + 1} из ${allImages.length}`"
             >
@@ -342,7 +348,7 @@ onUnmounted(() => {
                 loading="lazy"
                 placeholder
               />
-            </button>
+            </UButton>
           </div>
         </div>
 
@@ -472,7 +478,7 @@ onUnmounted(() => {
                 <div>
                   <label class="block text-sm font-medium mb-2">Время начала</label>
                   <div class="grid grid-cols-4 gap-1.5">
-                    <button
+                    <UButton
                       v-for="slot in timeSlots"
                       :key="slot.value"
                       type="button"
@@ -485,10 +491,12 @@ onUnmounted(() => {
                             ? 'bg-white dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-900/20 border-gray-200 dark:border-gray-700 hover:border-primary-300'
                             : 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-600 cursor-not-allowed border-gray-200 dark:border-gray-700 line-through'
                       ]"
+                      variant="ghost"
+                      color="neutral"
                       @click="slot.available && (bookingTime = slot.value)"
                     >
                       {{ slot.label }}
-                    </button>
+                    </UButton>
                   </div>
                   <div v-if="bookingDate" class="mt-2 flex items-center gap-2 text-xs text-gray-500">
                     <span class="inline-flex items-center gap-1">
@@ -570,7 +578,8 @@ onUnmounted(() => {
     <USlideover
       v-model:open="showBookingSlideover"
       side="bottom"
-      :ui="{ content: 'max-w-lg max-h-[85vh]' }"
+      inset
+      :ui="{ content: 'max-w-lg mx-auto max-h-[85vh]' }"
       title="Оформление бронирования"
       description="Заполните форму, и мы свяжемся с вами для подтверждения."
     >

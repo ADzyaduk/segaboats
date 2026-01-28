@@ -1,94 +1,12 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-/* Custom CSS Variables */
-:root {
-  --color-primary: #3b82f6;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #64748b;
-  --color-accent: #f59e0b;
-  --color-sea: #0077b6;
-  --color-sea-light: #00b4d8;
-  --color-sand: #f4a261;
-  
-  /* Theme colors (default web theme) */
-  --color-background: #ffffff;
-  --color-text: #1e293b;
-  --color-border: #e2e8f0;
-  --color-card: #ffffff;
-  --color-muted: #94a3b8;
-}
-
-/* Dark mode theme */
-.dark {
-  --color-background: #0f172a;
-  --color-text: #f1f5f9;
-  --color-border: #334155;
-  --color-card: #1e293b;
-  --color-muted: #64748b;
-}
-
-/* Telegram Mini App specific styles */
-.telegram-app {
-  /* Telegram theme variables will be set dynamically via JavaScript */
-  --tg-theme-bg-color: var(--color-background);
-  --tg-theme-text-color: var(--color-text);
-  --tg-theme-button-color: var(--color-primary);
-  --tg-theme-button-text-color: var(--color-primary-foreground);
-  --tg-theme-link-color: var(--color-accent);
-  --tg-theme-hint-color: var(--color-muted);
-  --tg-theme-secondary-bg-color: var(--color-card);
-}
-
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-gray-100);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-gray-400);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-500);
-}
-
-/* Dark mode scrollbar */
-.dark ::-webkit-scrollbar-track {
-  background: var(--color-gray-800);
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-600);
-}
-
-/* Thin scrollbar utility */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-gray-300);
-  border-radius: 2px;
-}
-
-.dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-gray-600);
-}
-
-/* Animation utilities */
+/* Базовые анимации */
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -105,37 +23,6 @@ html {
   }
 }
 
-@keyframes slide-down {
-  from { 
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scale-in {
-  from { 
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to { 
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
@@ -144,114 +31,7 @@ html {
   animation: slide-up 0.4s ease-out;
 }
 
-.animate-slide-down {
-  animation: slide-down 0.4s ease-out;
-}
-
-.animate-scale-in {
-  animation: scale-in 0.3s ease-out;
-}
-
-/* Staggered animation delays for lists */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.3s; }
-
-/* Page transition animations */
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-/* Pulse animation for loading states */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.animate-pulse-subtle {
-  animation: pulse-subtle 2s ease-in-out infinite;
-}
-
-/* Bounce animation for icons on hover */
-@keyframes bounce-subtle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-.hover-bounce:hover {
-  animation: bounce-subtle 0.4s ease;
-}
-
-/* Skeleton shimmer effect */
-.skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--color-gray-200) 0%,
-    var(--color-gray-100) 50%,
-    var(--color-gray-200) 100%
-  );
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite;
-}
-
-.dark .skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--color-gray-800) 0%,
-    var(--color-gray-700) 50%,
-    var(--color-gray-800) 100%
-  );
-  background-size: 1000px 100%;
-}
-
-/* Boat card hover effects */
-.boat-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.boat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-}
-
-/* Slideover customization - уменьшенные размеры */
-/* Для слайдоверов снизу уменьшаем ширину и высоту */
-[data-headlessui-state] [data-side="bottom"] > div {
-  max-width: 32rem !important; /* ~512px вместо полной ширины */
-  width: 100% !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-[data-headlessui-state] [data-side="bottom"] > div > div {
-  max-height: 85vh !important; /* 85% высоты экрана */
-  overflow-y: auto;
-  border-radius: 1rem 1rem 0 0 !important;
-}
-
-/* Альтернативный селектор для Nuxt UI */
-.fixed.inset-0.flex.items-end.justify-center > div {
-  max-width: 32rem !important;
-  width: 100% !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-.fixed.inset-0.flex.items-end.justify-center > div > div {
-  max-height: 85vh !important;
-  overflow-y: auto;
+/* Safe area padding for iOS devices */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ButtonProps } from '@nuxt/ui'
 import BoatCard from '~/components/shared/BoatCard.vue'
 
 const { formatPrice } = useBoats()
@@ -42,7 +43,7 @@ const parseBoatData = (boats: any[]) => {
 useSeoMeta({
   title: 'Аренда яхт в Сочи',
   description: 'Арендуйте яхту в Сочи для незабываемых морских прогулок. Катера, яхты, катамараны с капитаном. Онлайн бронирование.',
-  ogTitle: 'Яхты Сочи - Аренда яхт и катеров',
+  ogTitle: 'В Море! - Аренда яхт и катеров',
   ogDescription: 'Более 50 яхт в каталоге. Онлайн бронирование, опытные капитаны, лучшие цены.',
   ogImage: '/og-image.jpg',
   ogType: 'website',
@@ -60,7 +61,7 @@ useHead({
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'LocalBusiness',
-        name: 'Яхты Сочи',
+        name: 'В Море!',
         description: 'Аренда яхт и катеров в Сочи',
         url: 'https://yachts-sochi.ru',
         telephone: '+7 (900) 123-45-67',
@@ -123,82 +124,97 @@ const stats = [
   { value: '5 лет', label: 'На рынке' },
   { value: '24/7', label: 'Поддержка' }
 ]
+
+// Hero links
+const heroLinks: ButtonProps[] = [
+  {
+    label: 'Выбрать яхту',
+    to: '/boats',
+    color: 'primary',
+    size: 'xl'
+  },
+  {
+    label: 'Позвоните нам',
+    href: 'tel:+79001234567',
+    variant: 'outline',
+    color: 'neutral',
+    icon: 'i-heroicons-phone',
+    size: 'xl'
+  }
+]
+
+// CTA links
+const ctaLinks: ButtonProps[] = [
+  {
+    label: 'Забронировать яхту',
+    to: '/boats',
+    color: 'primary',
+    size: 'xl'
+  },
+  {
+    label: 'Позвоните нам',
+    href: 'tel:+79001234567',
+    variant: 'outline',
+    color: 'neutral',
+    icon: 'i-heroicons-phone',
+    size: 'xl'
+  }
+]
 </script>
 
 <template>
   <div>
     <!-- Hero Section -->
-    <section 
-      class="relative overflow-hidden min-h-[500px] sm:min-h-[600px] md:min-h-[700px] flex items-center hero-bg" 
-      aria-label="Главная секция"
+    <UPageHero
+      title="Аренда яхт в Сочи"
+      description="Незабываемые морские прогулки, романтические свидания, праздники и корпоративы на воде"
+      :links="heroLinks"
+      orientation="horizontal"
     >
-      <!-- Overlay -->
-      <div class="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/65 dark:from-black/40 dark:via-black/40 dark:to-black/40 z-10"></div>
+      <NuxtImg
+        src="/img/hero.jpg"
+        alt="Яхты в Сочи"
+        class="rounded-lg shadow-2xl ring ring-default w-full"
+        width="640"
+        height="480"
+        loading="eager"
+      />
+    </UPageHero>
 
-      <UContainer class="relative z-30 py-20 md:py-32">
-        <div class="max-w-3xl mx-auto text-center">
-          <h1 class="text-4xl md:text-6xl font-bold mb-6 text-white animate-slide-up" style="text-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.9);">
-            Аренда яхт в Сочи
-          </h1>
-          <p class="text-xl md:text-2xl text-white mb-8 animate-slide-up" style="animation-delay: 0.1s; text-shadow: 0 3px 8px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.9);">
-            Незабываемые морские прогулки, романтические свидания, праздники и корпоративы на воде
-          </p>
-          <div class="flex flex-wrap justify-center gap-4 animate-slide-up" style="animation-delay: 0.2s">
-            <UButton 
-              to="/boats" 
-              size="xl" 
-              color="primary"
-              class="font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
-              aria-label="Перейти к каталогу яхт"
-            >
-              Выбрать яхту
-            </UButton>
-            <UButton 
-              href="tel:+79001234567"
-              size="xl" 
-              variant="outline"
-              color="neutral"
-              icon="i-heroicons-phone"
-              class="font-semibold border-2 border-white bg-white/10 text-white! hover:bg-white/20 hover:scale-105 transition-all duration-300"
-              aria-label="Позвонить нам"
-            >
-              Позвоните нам
-            </UButton>
-          </div>
-        </div>
-
-        <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-16 pt-8 border-t border-white/40">
+    <!-- Stats Section -->
+    <section class="py-8 border-t border-default">
+      <UContainer>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           <div v-for="stat in stats" :key="stat.label" class="text-center">
-            <div class="text-2xl md:text-3xl lg:text-4xl font-bold text-white" style="text-shadow: 0 3px 10px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9);">{{ stat.value }}</div>
-            <div class="text-white text-xs md:text-sm mt-1" style="text-shadow: 0 2px 6px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.9);">{{ stat.label }}</div>
+            <div class="text-2xl md:text-3xl lg:text-4xl font-bold text-highlighted">{{ stat.value }}</div>
+            <div class="text-muted text-xs md:text-sm mt-1">{{ stat.label }}</div>
           </div>
         </div>
       </UContainer>
     </section>
 
     <!-- Features -->
-    <section class="py-16 md:py-20 lg:py-28 bg-gray-50 dark:bg-gray-900">
+    <section class="py-16 md:py-20 lg:py-28 bg-elevated">
       <UContainer>
         <div class="text-center mb-14">
-          <span class="inline-block text-primary-600 dark:text-primary-400 text-sm font-semibold uppercase tracking-wider mb-3">Преимущества</span>
-          <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+          <span class="inline-block text-primary-600 text-sm font-semibold uppercase tracking-wider mb-3">Преимущества</span>
+          <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-highlighted mb-4">
             Почему выбирают нас
           </h2>
-          <p class="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+          <p class="text-muted text-lg max-w-2xl mx-auto">
             Мы предлагаем лучший сервис для вашего комфорта и безопасности
           </p>
         </div>
 
         <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           <UCard v-for="feature in features" :key="feature.title" class="text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-6 md:p-8">
-            <div class="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 md:mb-5 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center">
-              <UIcon :name="feature.icon" class="w-7 h-7 md:w-8 md:h-8 text-primary-600 dark:text-primary-400" />
+            <div class="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 md:mb-5 bg-primary-100 rounded-2xl flex items-center justify-center">
+              <UIcon :name="feature.icon" class="w-7 h-7 md:w-8 md:h-8 text-primary-600" />
             </div>
-            <h3 class="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-3">
+            <h3 class="text-lg md:text-xl font-bold text-highlighted mb-3">
               {{ feature.title }}
             </h3>
-            <p class="text-sm md:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p class="text-sm md:text-base text-muted leading-relaxed">
               {{ feature.description }}
             </p>
           </UCard>
@@ -210,11 +226,11 @@ const stats = [
     <section class="py-16 md:py-20 lg:py-28">
       <UContainer>
         <div class="text-center mb-14">
-          <span class="inline-block text-primary-600 dark:text-primary-400 text-sm font-semibold uppercase tracking-wider mb-3">Каталог</span>
-          <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+          <span class="inline-block text-primary-600 text-sm font-semibold uppercase tracking-wider mb-3">Каталог</span>
+          <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-highlighted mb-4">
             Популярные яхты
           </h2>
-          <p class="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+          <p class="text-muted text-lg max-w-2xl mx-auto">
             Лучшие предложения для морских прогулок в Сочи
           </p>
         </div>
@@ -222,11 +238,11 @@ const stats = [
         <!-- Empty State for Boats -->
         <div v-if="featuredBoats.length === 0" class="text-center mb-10">
           <UCard class="py-12">
-            <UIcon name="i-heroicons-boat" class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <UIcon name="i-heroicons-boat" class="w-16 h-16 mx-auto text-muted mb-4" />
+            <h3 class="text-xl font-semibold text-highlighted mb-2">
               Яхты не найдены
             </h3>
-            <p class="text-gray-600 dark:text-gray-400">
+            <p class="text-muted">
               Попробуйте позже
             </p>
           </UCard>
@@ -246,7 +262,6 @@ const stats = [
             to="/boats" 
             size="lg" 
             color="primary"
-            class="hover:scale-[1.02] hover:shadow-lg transition-all duration-200"
           >
             Смотреть все яхты
           </UButton>
@@ -255,51 +270,51 @@ const stats = [
     </section>
 
     <!-- How it works -->
-    <section id="how-it-works" class="py-16 md:py-20 lg:py-28 bg-gray-50 dark:bg-gray-900">
+    <section id="how-it-works" class="py-16 md:py-20 lg:py-28 bg-elevated">
       <UContainer>
         <div class="text-center mb-14">
-          <span class="inline-block text-primary-600 dark:text-primary-400 text-sm font-semibold uppercase tracking-wider mb-3">Просто и быстро</span>
-          <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+          <span class="inline-block text-primary-600 text-sm font-semibold uppercase tracking-wider mb-3">Просто и быстро</span>
+          <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-highlighted mb-4">
             Как забронировать
           </h2>
-          <p class="text-gray-600 dark:text-gray-400 text-lg max-w-xl mx-auto">
+          <p class="text-muted text-lg max-w-xl mx-auto">
             Всего 3 простых шага до вашей морской прогулки
           </p>
         </div>
 
         <div class="grid md:grid-cols-3 gap-8 md:gap-12">
           <div class="text-center">
-            <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-5 bg-primary-600 text-white rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-bold shadow-lg" aria-label="Шаг 1">
+            <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-5 bg-primary-600 text-inverted rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-bold shadow-lg" aria-label="Шаг 1">
               1
             </div>
-            <h3 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            <h3 class="text-xl md:text-2xl font-bold text-highlighted mb-3">
               Выберите яхту
             </h3>
-            <p class="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p class="text-base text-muted leading-relaxed">
               Изучите каталог и выберите яхту по параметрам и бюджету
             </p>
           </div>
 
           <div class="text-center">
-            <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-5 bg-primary-600 text-white rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-bold shadow-lg" aria-label="Шаг 2">
+            <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-5 bg-primary-600 text-inverted rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-bold shadow-lg" aria-label="Шаг 2">
               2
             </div>
-            <h3 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            <h3 class="text-xl md:text-2xl font-bold text-highlighted mb-3">
               Забронируйте
             </h3>
-            <p class="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p class="text-base text-muted leading-relaxed">
               Укажите дату, время и количество гостей
             </p>
           </div>
 
           <div class="text-center">
-            <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-5 bg-primary-600 text-white rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-bold shadow-lg" aria-label="Шаг 3">
+            <div class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-5 bg-primary-600 text-inverted rounded-2xl flex items-center justify-center text-2xl md:text-3xl font-bold shadow-lg" aria-label="Шаг 3">
               3
             </div>
-            <h3 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            <h3 class="text-xl md:text-2xl font-bold text-highlighted mb-3">
               Наслаждайтесь
             </h3>
-            <p class="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p class="text-base text-muted leading-relaxed">
               Приходите на причал и отправляйтесь в море!
             </p>
           </div>
@@ -310,7 +325,6 @@ const stats = [
             to="/boats" 
             size="xl" 
             color="primary"
-            class="hover:scale-[1.02] hover:shadow-lg transition-all duration-200"
           >
             Начать бронирование
           </UButton>
@@ -322,11 +336,11 @@ const stats = [
     <section class="py-16 md:py-20 lg:py-28">
       <UContainer>
         <div class="text-center mb-14">
-          <span class="inline-block text-primary-600 dark:text-primary-400 text-sm font-semibold uppercase tracking-wider mb-3">Вместе веселее</span>
-          <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+          <span class="inline-block text-primary-600 text-sm font-semibold uppercase tracking-wider mb-3">Вместе веселее</span>
+          <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-highlighted mb-4">
             Групповые поездки
           </h2>
-          <p class="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+          <p class="text-muted text-lg max-w-2xl mx-auto">
             Присоединяйтесь к групповым прогулкам и рыбалке. Билеты на одного человека
           </p>
         </div>
@@ -349,11 +363,11 @@ const stats = [
         <!-- Empty State -->
         <div v-else class="text-center mb-10">
           <UCard class="py-12">
-            <UIcon name="i-heroicons-calendar" class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <UIcon name="i-heroicons-calendar" class="w-16 h-16 mx-auto text-muted mb-4" />
+            <h3 class="text-xl font-semibold text-highlighted mb-2">
               Нет доступных услуг
             </h3>
-            <p class="text-gray-600 dark:text-gray-400">
+            <p class="text-muted">
               Групповые поездки появятся здесь
             </p>
           </UCard>
@@ -362,56 +376,22 @@ const stats = [
     </section>
 
     <!-- CTA -->
-    <section class="relative overflow-hidden py-20 md:py-32 hero-bg">
-      <!-- Overlay -->
-      <div class="absolute inset-0 bg-linear-to-b from-black/75 via-black/70 to-black/65 dark:from-black/40 dark:via-black/40 dark:to-black/40 z-10"></div>
-
-      <UContainer class="relative z-20 text-center">
-        <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white" style="text-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.9);">
-          Готовы к морскому приключению?
-        </h2>
-        <p class="text-lg sm:text-xl md:text-2xl text-white mb-8 md:mb-10 max-w-2xl mx-auto px-4" style="text-shadow: 0 3px 8px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.9);">
-          Забронируйте яхту прямо сейчас и получите скидку 10% на первую прогулку
-        </p>
-        <div class="flex flex-wrap justify-center gap-4">
-          <UButton 
-            to="/boats" 
-            size="xl" 
-            color="primary"
-            class="font-semibold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
-            aria-label="Забронировать яхту"
-          >
-            Забронировать яхту
-          </UButton>
-          <UButton 
-            href="tel:+79001234567"
-            size="xl" 
-            variant="outline" 
-            color="neutral"
-            icon="i-heroicons-phone"
-            class="font-semibold border-2 border-white bg-white/10 text-white! hover:bg-white/20 hover:scale-105 transition-all duration-300"
-            aria-label="Позвонить нам"
-          >
-            Позвоните нам
-          </UButton>
-        </div>
-      </UContainer>
-    </section>
+    <UPageCTA
+      title="Готовы к морскому приключению?"
+      description="Забронируйте яхту прямо сейчас и получите скидку 10% на первую прогулку"
+      :links="ctaLinks"
+      variant="outline"
+      orientation="horizontal"
+    >
+      <NuxtImg
+        src="/img/hero.jpg"
+        alt="Морское приключение"
+        class="w-full rounded-lg"
+        width="640"
+        height="480"
+        loading="lazy"
+      />
+    </UPageCTA>
   </div>
 </template>
 
-<style scoped>
-.hero-bg {
-  background-image: url('/img/hero.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-}
-
-@media (max-width: 768px) {
-  .hero-bg {
-    background-attachment: scroll;
-  }
-}
-</style>
