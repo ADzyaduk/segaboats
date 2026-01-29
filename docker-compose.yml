@@ -85,6 +85,11 @@ services:
       # Telegram for notifications
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_ADMIN_CHAT_ID=${TELEGRAM_ADMIN_CHAT_ID}
+      # Outbound proxy (optional): only n8n uses it, e.g. to reach Google APIs from РФ
+      # Set N8N_HTTP_PROXY in .env like: http://user:password@proxy-host:port
+      - HTTP_PROXY=${N8N_HTTP_PROXY:-}
+      - HTTPS_PROXY=${N8N_HTTPS_PROXY:-${N8N_HTTP_PROXY}}
+      - NO_PROXY=localhost,127.0.0.1,postgres,boats2026-app
     volumes:
       - n8n_data:/home/node/.n8n
     ports:
