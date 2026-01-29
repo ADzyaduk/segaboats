@@ -42,8 +42,9 @@ services:
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
       TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID}
       TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET}
-      # Other variables
+      # Other variables (Nuxt server reads WEBHOOK_URL for n8n calls)
       N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-https://n8n.v-more.ru/webhook}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-https://n8n.v-more.ru/webhook}
       N8N_API_KEY: ${N8N_API_KEY}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin2026}
       NODE_ENV: production
