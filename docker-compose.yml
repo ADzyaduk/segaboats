@@ -83,14 +83,16 @@ services:
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-boats2026secret}
       # OpenRouter API for AI workflows
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      # Telegram for notifications
+      # Telegram for notifications (основной бот boats/v-more)
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_ADMIN_CHAT_ID=${TELEGRAM_ADMIN_CHAT_ID}
+      # Cal AI бот (если отдельный) — для воркфлоу Cal AI
+      - CAL_AI_TELEGRAM_BOT_TOKEN=${CAL_AI_TELEGRAM_BOT_TOKEN:-}
       # Outbound proxy (optional): only n8n uses it, e.g. to reach Google APIs from РФ
       # Set N8N_HTTP_PROXY in .env like: http://user:password@proxy-host:port
       - HTTP_PROXY=${N8N_HTTP_PROXY:-}
       - HTTPS_PROXY=${N8N_HTTPS_PROXY:-${N8N_HTTP_PROXY}}
-      - NO_PROXY=localhost,127.0.0.1,postgres,boats2026-app
+      - NO_PROXY=localhost,127.0.0.1,postgres,boats2026-app,mcp-openfoodfacts
     volumes:
       - n8n_data:/home/node/.n8n
     ports:
@@ -98,6 +100,22 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - boats-network
+
+  # Open Food Facts MCP Server (HTTP/SSE via mcp-proxy)
+  # Isolated container - stdio MCP wrapped for n8n and other remote clients
+  mcp-openfoodfacts:
+    build:
+      context: .
+      dockerfile: docker/mcp-openfoodfacts.Dockerfile
+    container_name: boats2026-mcp-openfoodfacts
+    restart: unless-stopped
+    environment:
+      - OPEN_FOOD_FACTS_BASE_URL=https://world.openfoodfacts.net
+      - OPEN_FOOD_FACTS_USER_AGENT=Boats2026-MCP/1.0
+    ports:
+      - "8080:8080"
     networks:
       - boats-network
 
