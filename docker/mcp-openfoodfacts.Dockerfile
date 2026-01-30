@@ -10,8 +10,8 @@ RUN apk add --no-cache nodejs npm git
 WORKDIR /app
 RUN git clone --depth 1 https://github.com/caleb-conner/open-food-facts-mcp off-mcp
 WORKDIR /app/off-mcp
-# Patch: upstream has TS strict errors (args possibly undefined) - relax for build
-RUN sed -i 's/"strict": true/"strict": false/' tsconfig.json
+# Patch: upstream has TS errors (args unknown/undefined) - add type assertion
+RUN sed -i 's/arguments: args } = request.params;/arguments: rawArgs } = request.params; const args = (rawArgs ?? {}) as any;/' src/index.ts
 RUN npm install && npm run build && rm -rf .git node_modules/.cache
 
 # Default: expose SSE on port 8080, spawn open-food-facts-mcp via stdio
