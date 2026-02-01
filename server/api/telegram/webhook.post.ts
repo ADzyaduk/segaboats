@@ -51,9 +51,16 @@ export default defineEventHandler(async (event) => {
   try {
     const config = useRuntimeConfig()
 
-    // Verify webhook secret (optional but recommended)
+    if (!config.telegramWebhookSecret) {
+      throw createError({
+        statusCode: 503,
+        message: 'Telegram webhook secret is not configured'
+      })
+    }
+
+    // Verify webhook secret
     const secretToken = getHeader(event, 'x-telegram-bot-api-secret-token')
-    if (config.telegramWebhookSecret && secretToken !== config.telegramWebhookSecret) {
+    if (secretToken !== config.telegramWebhookSecret) {
       console.warn('Invalid Telegram webhook secret')
       throw createError({
         statusCode: 401,

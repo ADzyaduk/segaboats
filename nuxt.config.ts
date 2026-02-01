@@ -29,7 +29,10 @@ export default defineNuxtConfig({
     telegramAdminChatId: process.env.TELEGRAM_ADMIN_CHAT_ID || process.env.NUXT_TELEGRAM_ADMIN_CHAT_ID || '', // Будет прочитано из TELEGRAM_ADMIN_CHAT_ID или NUXT_TELEGRAM_ADMIN_CHAT_ID
     webhookUrl: process.env.WEBHOOK_URL || 'https://n8n.v-more.ru/webhook',
     webhookApiKey: process.env.WEBHOOK_API_KEY || '',
-    adminPassword: process.env.ADMIN_PASSWORD || 'admin2026',
+    adminPassword: process.env.ADMIN_PASSWORD || '',
+    adminPasswordHash: process.env.ADMIN_PASSWORD_HASH || '',
+    adminSessionSecret: process.env.ADMIN_SESSION_SECRET || '',
+    n8nWebhookSecret: process.env.N8N_WEBHOOK_SECRET || '',
 
     // Публичные переменные (доступны на клиенте)
     public: {
@@ -89,6 +92,7 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     minify: true,
+    maxRequestSize: '10mb',
     prerender: {
       crawlLinks: true,
       routes: ['/']

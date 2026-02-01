@@ -1,9 +1,11 @@
 // Get single group trip with tickets (Admin only)
 
 import { prisma } from '~~/server/utils/db'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
+    await requireAdminAuth(event)
     const id = getRouterParam(event, 'id')
 
     if (!id) {

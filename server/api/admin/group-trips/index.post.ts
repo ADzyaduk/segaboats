@@ -1,6 +1,7 @@
 // Create group trip (Admin only)
 
 import { prisma } from '~~/server/utils/db'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 interface GroupTripData {
   type: 'SHORT' | 'MEDIUM' | 'FISHING'
@@ -15,7 +16,7 @@ interface GroupTripData {
 
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add admin authentication check
+    await requireAdminAuth(event)
 
     const body = await readBody<GroupTripData>()
 

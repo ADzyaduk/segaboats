@@ -1,6 +1,7 @@
 // Create new boat (Admin only)
 
 import { prisma } from '~~/server/utils/db'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 interface BoatData {
   name: string
@@ -27,11 +28,7 @@ interface BoatData {
 
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add admin authentication check
-    // const isAdmin = await checkAdminAuth(event)
-    // if (!isAdmin) {
-    //   throw createError({ statusCode: 403, message: 'Forbidden' })
-    // }
+    await requireAdminAuth(event)
 
     const body = await readBody<BoatData>(event)
 

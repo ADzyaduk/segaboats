@@ -2,10 +2,11 @@
 // Note: Services are now static, this endpoint is for viewing only
 
 import { GROUP_TRIP_SERVICES } from '~~/server/utils/groupTripServices'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add admin authentication check
+    await requireAdminAuth(event)
 
     // Return static services (read-only)
     return {

@@ -1,6 +1,7 @@
 // Create group trip service (Admin only)
 
 import { prisma } from '~~/server/utils/db'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 interface ServiceBody {
   type: 'SHORT' | 'MEDIUM' | 'FISHING'
@@ -14,7 +15,7 @@ interface ServiceBody {
 
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add admin authentication check
+    await requireAdminAuth(event)
 
     const body = await readBody<ServiceBody>(event)
 

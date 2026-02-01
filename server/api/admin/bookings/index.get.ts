@@ -1,10 +1,11 @@
 // Get all bookings (Admin only)
 
 import { prisma } from '~~/server/utils/db'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add admin authentication check
+    await requireAdminAuth(event)
 
     const query = getQuery(event)
     const status = query.status as string | undefined

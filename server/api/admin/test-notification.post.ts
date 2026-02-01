@@ -3,23 +3,17 @@
 
 import { sendAdminNotification } from '~~/server/utils/telegram'
 import { getAdminChatId } from '~~/server/utils/notifications'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
+    await requireAdminAuth(event)
+
     console.log('[test-notification] Testing admin notification...')
-    
+
     const config = useRuntimeConfig()
-    
-    // Debug: log all runtime config keys
-    console.log('[test-notification] Runtime config keys:', Object.keys(config))
-    console.log('[test-notification] Raw process.env TELEGRAM_BOT_TOKEN:', process.env.TELEGRAM_BOT_TOKEN ? 'SET' : 'NOT SET')
-    console.log('[test-notification] Raw process.env TELEGRAM_ADMIN_CHAT_ID:', process.env.TELEGRAM_ADMIN_CHAT_ID || 'NOT SET')
-    
     const adminChatId = config.telegramAdminChatId
     const botToken = config.telegramBotToken
-    
-    console.log('[test-notification] From runtime config - telegramBotToken:', botToken ? `${botToken.substring(0, 10)}...` : 'NOT SET')
-    console.log('[test-notification] From runtime config - telegramAdminChatId:', adminChatId)
     
     // Check configuration
     const configStatus = {

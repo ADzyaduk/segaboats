@@ -47,6 +47,9 @@ export async function triggerN8nWebhook(
 
     // Clean webhook path (remove leading/trailing slashes)
     const cleanPath = webhookPath.replace(/^\/+|\/+$/g, '')
+    if (!/^[a-z0-9-_]{1,64}$/i.test(cleanPath)) {
+      return { success: false, error: 'Invalid webhook path' }
+    }
     const url = `${webhookUrl.replace(/\/+$/, '')}/${cleanPath}`
     
     console.log('[n8n] Full webhook URL:', url)

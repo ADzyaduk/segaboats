@@ -4,6 +4,7 @@
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 // Create slug from boat name (supports Cyrillic)
 function createSlug(name: string): string {
@@ -31,7 +32,7 @@ function createSlug(name: string): string {
 
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add admin authentication check
+    await requireAdminAuth(event)
 
     const formData = await readMultipartFormData(event)
     
@@ -85,8 +86,9 @@ export default defineEventHandler(async (event) => {
     // Generate unique filename
     const timestamp = Date.now()
     const random = Math.random().toString(36).substring(2, 9)
-    const extension = file.filename.split('.').pop() || 'jpg'
-    const filename = `${timestamp}-${random}.${extension}`
+    const rawExtension = file.filename.split('.').pop() || 'jpg'
+    const safeExtension = rawExtension.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+    const filename = `${timestamp}-${random}.${safeExtension}`
 
     // Create directory structure: public/images/boats/{boat-slug}/
     const uploadDir = join(process.cwd(), 'public', 'images', 'boats', boatSlug)

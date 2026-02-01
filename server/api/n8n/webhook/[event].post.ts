@@ -5,6 +5,23 @@ import { triggerN8nWebhook } from '~~/server/utils/n8n'
 
 export default defineEventHandler(async (event) => {
   try {
+    const config = useRuntimeConfig()
+    const secret = config.n8nWebhookSecret
+    if (!secret) {
+      throw createError({
+        statusCode: 503,
+        message: 'n8n webhook secret is not configured'
+      })
+    }
+
+    const providedSecret = getHeader(event, 'x-n8n-webhook-secret')
+    if (!providedSecret || providedSecret !== secret) {
+      throw createError({
+        statusCode: 401,
+        message: 'Unauthorized'
+      })
+    }
+
     const eventName = getRouterParam(event, 'event')
     const body = await readBody(event)
 
@@ -12,6 +29,13 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 400,
         message: 'Event name is required'
+      })
+    }
+
+    if (!/^[a-z0-9-_]{1,64}$/i.test(eventName)) {
+      throw createError({
+        statusCode: 400,
+        message: 'Invalid event name'
       })
     }
 

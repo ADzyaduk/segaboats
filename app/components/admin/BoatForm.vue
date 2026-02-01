@@ -58,7 +58,8 @@ const uploadImage = async (file: File) => {
       data: { url: string; filename: string; boatSlug: string }
     }>('/api/admin/upload', {
       method: 'POST',
-      body: uploadFormData
+      body: uploadFormData,
+      credentials: 'include'
     })
 
     if (response.success && response.data) {

@@ -5,9 +5,11 @@ import {
   notifyCustomerTicketConfirmed, 
   notifyCustomerTicketCancelled 
 } from '~~/server/utils/notifications'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
+    await requireAdminAuth(event)
     const tripId = getRouterParam(event, 'id')
     const ticketId = getRouterParam(event, 'ticketId')
     const body = await readBody<{ status: string }>()

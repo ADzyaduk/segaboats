@@ -1,0 +1,51 @@
+{
+  "name": "Cal AI — Edamam Nutrition Lookup Tool",
+  "nodes": [
+    {
+      "parameters": {
+        "toolDescription": "Get nutrition for a food item. Parameter ingr: ingredient with quantity in English — e.g. \"3 eggs\", \"200g chicken breast\", \"1 cup oatmeal\". Edamam returns calories, protein (PROCNT), fat (FAT), carbs (CHOCDF). Use when user wants to add a meal by text (e.g. \"добавь 3 яйца\", \"200g chicken\").",
+        "url": "https://api.edamam.com/api/nutrition-data",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "app_id",
+              "value": "e5c7105c"
+            },
+            {
+              "name": "app_key",
+              "value": "5933ccdf7845d8caea04984a711c0fff"
+            },
+            {
+              "name": "ingr",
+              "value": "={{ $fromAI('ingr', 'Ingredient with quantity in English — e.g. 3 eggs, 200g chicken breast, 1 cup oatmeal', 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [3344, 1536],
+      "id": "edamam-nutrition-lookup",
+      "name": "nutrition_lookup"
+    }
+  ],
+  "connections": {
+    "nutrition_lookup": {
+      "ai_tool": [
+        [
+          {
+            "node": "Cal IA Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

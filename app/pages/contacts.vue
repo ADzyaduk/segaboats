@@ -74,19 +74,32 @@ const submitForm = async () => {
   }
 
   isSubmitting.value = true
-  
-  // Simulate form submission
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  isSubmitting.value = false
-  isSubmitted.value = true
-  toast.success('Отправлено', 'Мы свяжемся с вами в ближайшее время')
-  
-  // Reset form
-  form.name = ''
-  form.phone = ''
-  form.email = ''
-  form.message = ''
+
+  try {
+    await $fetch('/api/contact', {
+      method: 'POST',
+      body: {
+        name: form.name,
+        phone: form.phone,
+        email: form.email || undefined,
+        message: form.message || undefined
+      }
+    })
+
+    isSubmitted.value = true
+    toast.success('Отправлено', 'Мы свяжемся с вами в ближайшее время')
+
+    // Reset form
+    form.name = ''
+    form.phone = ''
+    form.email = ''
+    form.message = ''
+  } catch (err: any) {
+    const message = err?.data?.statusMessage || err?.message || 'Не удалось отправить заявку'
+    toast.error('Ошибка', message)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 

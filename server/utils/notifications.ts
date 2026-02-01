@@ -149,15 +149,8 @@ export async function notifyAdminNewTicket(ticket: {
 }): Promise<{ success: boolean; messageId?: number }> {
   console.log('[notifications] 📤 Attempting to notify admin about new ticket:', ticket.id)
   
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'Entry: notifyAdminNewTicket called',data:{ticketId:ticket.id,serviceTitle:ticket.serviceTitle,totalPrice:ticket.totalPrice,adultTickets:ticket.adultTickets,childTickets:ticket.childTickets},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
-  
   try {
     const adminChatId = getAdminChatId()
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'Got adminChatId',data:{adminChatId,hasAdminChatId:!!adminChatId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     if (!adminChatId) {
       console.error('[notifications] ❌ Cannot notify admin: TELEGRAM_ADMIN_CHAT_ID not configured')
       return { success: false }
@@ -206,13 +199,7 @@ export async function notifyAdminNewTicket(ticket: {
         ]
       }
       console.log('[notifications] 📨 Sending notification to admin chat:', adminChatId)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'Before sendAdminNotification (short callback)',data:{adminChatId,messageLength:formattedMessage.length,hasButtons:!!buttons,buttons:JSON.stringify(buttons)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       const result = await sendAdminNotification(adminChatId, formattedMessage, buttons)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'After sendAdminNotification (short callback)',data:{success:result.success,messageId:result.messageId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       
       if (result.success) {
         console.log('[notifications] ✅ Successfully notified admin about ticket:', ticket.id, 'Message ID:', result.messageId)
@@ -236,13 +223,7 @@ export async function notifyAdminNewTicket(ticket: {
     }
 
     console.log('[notifications] 📨 Sending notification to admin chat:', adminChatId)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'Before sendAdminNotification',data:{adminChatId,messageLength:formattedMessage.length,hasButtons:!!buttons,buttons:JSON.stringify(buttons)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     const result = await sendAdminNotification(adminChatId, formattedMessage, buttons)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/fcafbc82-373d-455c-ae65-b91ce9c6082f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'notifications.ts:notifyAdminNewTicket',message:'After sendAdminNotification',data:{success:result.success,messageId:result.messageId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     
     if (result.success) {
       console.log('[notifications] ✅ Successfully notified admin about ticket:', ticket.id, 'Message ID:', result.messageId)
@@ -400,6 +381,44 @@ export async function notifyCustomerTicketCancelled(ticket: {
   } catch (error) {
     console.error('[notifications] Error notifying customer about ticket cancellation:', error)
     return false
+  }
+}
+
+// Notify admin about contact form submission
+export async function notifyAdminContactForm(data: {
+  name: string
+  phone: string
+  email?: string
+  message?: string
+}): Promise<{ success: boolean }> {
+  console.log('[notifications] 📤 Attempting to notify admin about contact form submission')
+
+  try {
+    const adminChatId = getAdminChatId()
+    if (!adminChatId) {
+      console.error('[notifications] ❌ Cannot notify admin: TELEGRAM_ADMIN_CHAT_ID not configured')
+      return { success: false }
+    }
+
+    const text = `
+📩 <b>Новая заявка с сайта</b>
+
+👤 Имя: ${data.name}
+📞 Телефон: ${data.phone}
+${data.email ? `📧 Email: ${data.email}` : ''}
+${data.message ? `\n💬 Сообщение:\n${data.message}` : ''}
+    `.trim()
+
+    const result = await sendAdminNotification(adminChatId, text)
+    if (result.success) {
+      console.log('[notifications] ✅ Successfully notified admin about contact form')
+    } else {
+      console.error('[notifications] ❌ Failed to notify admin about contact form')
+    }
+    return result
+  } catch (error: any) {
+    console.error('[notifications] ❌ Error notifying admin about contact form:', error?.message)
+    return { success: false }
   }
 }
 

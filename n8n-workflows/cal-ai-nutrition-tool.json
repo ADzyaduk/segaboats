@@ -1,0 +1,40 @@
+{
+  "name": "Cal AI — Nutrition Lookup Tool",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.api-ninjas.com/v1/nutrition",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.query }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "YOUR_API_NINJAS_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [400, 300],
+      "id": "nutrition-lookup-tool",
+      "name": "nutrition_lookup"
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

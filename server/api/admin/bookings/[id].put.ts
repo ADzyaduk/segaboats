@@ -5,10 +5,11 @@ import {
   notifyCustomerBookingConfirmed, 
   notifyCustomerBookingCancelled 
 } from '~~/server/utils/notifications'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add admin authentication check
+    await requireAdminAuth(event)
 
     const id = getRouterParam(event, 'id')
     const body = await readBody<{ status?: string }>(event)

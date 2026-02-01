@@ -1,23 +1,24 @@
 // Check admin authentication status
 
-import { prisma } from '~~/server/utils/db'
+import { getAdminFromEvent } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
-    const sessionToken = getCookie(event, 'admin_session')
+    const admin = await getAdminFromEvent(event)
 
-    if (!sessionToken) {
-      return {
-        authenticated: false
-      }
+    if (!admin) {
+      return { authenticated: false }
     }
 
-    // In production, validate session token from database
-    // For now, just check if cookie exists
-    // TODO: Implement proper session validation
-
     return {
-      authenticated: true
+      authenticated: true,
+      data: {
+        id: admin.id,
+        email: admin.email,
+        role: admin.role,
+        firstName: admin.firstName,
+        lastName: admin.lastName
+      }
     }
   } catch (error) {
     console.error('Auth check error:', error)

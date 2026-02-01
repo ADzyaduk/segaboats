@@ -1,10 +1,11 @@
 // Update boat (Admin only)
 
 import { prisma } from '~~/server/utils/db'
+import { requireAdminAuth } from '~~/server/utils/adminAuth'
 
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add admin authentication check
+    await requireAdminAuth(event)
     const id = getRouterParam(event, 'id')
     const body = await readBody<Partial<{
       name: string
